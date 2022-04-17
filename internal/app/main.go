@@ -110,9 +110,6 @@ func GetR2(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	writeUrl("123","https://yandex.ru/")
-	
-
 	http.HandleFunc("/",GetR2)
 
     server := &http.Server{
