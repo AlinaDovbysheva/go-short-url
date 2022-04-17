@@ -56,10 +56,6 @@ func isValidUrl(toTest string) bool {
 	return true
 }
 
-func isUrl(str string) (bool, error) {
-    parsedUrl, err := url.Parse(str)
-    return err == nil && parsedUrl.Scheme != "" && parsedUrl.Host != "", err
-}
 
 func GetR2(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
