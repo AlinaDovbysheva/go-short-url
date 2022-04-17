@@ -24,7 +24,7 @@ func writeUrl(id string, url string){
 }
 
 func findUrl(id string) (result string){
-	result = "not found"
+	result = ""
 	for _, row := range urls{
 		if row.ID == id {
 			result = row.URL
@@ -58,23 +58,24 @@ func isValidUrl(toTest string) bool {
 
 
 func GetR2(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.Error(w, "404 not found.", http.StatusNotFound)
-		return
-	}
-
 	switch r.Method {
 	case http.MethodGet:		
-		id := r.URL.Query().Get("id")
+		id := strings.Split(string(r.URL.Path),"/")[1]
 		if id == "" {
 			http.Error(w, "The query parameter is missing", http.StatusBadRequest)
 			return
 		}
 		fmt.Println(findUrl(id))
-		w.Header().Set("Location", findUrl(id))
-		// устанавливаем статус-код 307-http.StatusTemporaryRedirect  200 -http.StatusOK
-		w.WriteHeader(http.StatusTemporaryRedirect)
-	
+		urlFind:=findUrl(id)
+		if urlFind=="" {
+			http.Error(w, "url not exist", http.StatusBadRequest)
+			return
+		}else{
+			w.Header().Set("Location", urlFind)
+			// 307-http.StatusTemporaryRedirect  200 -http.StatusOK
+			w.WriteHeader(http.StatusTemporaryRedirect)
+		}
+		
 
 	case http.MethodPost:
 		fmt.Println("post")
@@ -94,17 +95,21 @@ func GetR2(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 			fmt.Fprintf(w, "url is not valid "+l)
-			//http.Error(w, "url is not valid", http.StatusMethodNotAllowed)
+			http.Error(w, "url is not valid ", http.StatusBadRequest)
+			//w.WriteHeader(http.StatusBadRequest)  //400
 		}
 		
 	default:
 		fmt.Fprintf(w, " only GET and POST methods are supported")
-		http.Error(w, "only GET and POST methods are supported", http.StatusMethodNotAllowed)
+		http.Error(w, "only GET and POST methods are supported", http.StatusBadRequest)
+		//w.WriteHeader(http.StatusBadRequest)  //400
 	}
 }
 
 
 func main() {
+
+	writeUrl("12","https://pkg.go.dev/net/http")
 
 	http.HandleFunc("/",GetR2)
 
