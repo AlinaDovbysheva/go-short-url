@@ -18,12 +18,12 @@ type urlItem struct {
 
 var urls []urlItem
 
-func writeUrl(id string, url string){
+func writeURL(id string, url string){
 	item := urlItem{ID: id, URL: url}
 	urls = append(urls, item)
 }
 
-func findUrl(id string) (result string){
+func findURL(id string) (result string){
 	result = ""
 	for _, row := range urls{
 		if row.ID == id {
@@ -44,7 +44,7 @@ func findUrl(id string) (result string){
 	 return string(b)
  }
 
-func isValidUrl(toTest string) bool {
+func isValidURL(toTest string) bool {
 	_, err := url.ParseRequestURI(toTest)
 	if err != nil {
 		return false
@@ -65,8 +65,8 @@ func GetR2(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "The query parameter is missing", http.StatusBadRequest)
 			return
 		}
-		fmt.Println(findUrl(id))
-		urlFind:=findUrl(id)
+		fmt.Println(findURL(id))
+		urlFind:=findURL(id)
 		if urlFind=="" {
 			http.Error(w, "url not exist", http.StatusBadRequest)
 			return
@@ -85,12 +85,12 @@ func GetR2(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		l:=strings.ReplaceAll(string(link), "'", "")
-		if isValidUrl(l){
+		if isValidURL(l){
 
 			id:=RandStringBytes(7)
-			writeUrl(id,l)
+			writeURL(id,l)
 			w.WriteHeader(http.StatusCreated)
-			b:=[]byte(`localhost:8080/`+id)
+			b:=[]byte(`http://localhost:8080/`+id)
 			w.Write(b)
 
 		} else {
@@ -109,7 +109,7 @@ func GetR2(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	writeUrl("12","https://pkg.go.dev/net/http")
+	writeURL("12","https://pkg.go.dev/net/http")
 
 	http.HandleFunc("/",GetR2)
 
