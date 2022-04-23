@@ -60,7 +60,7 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 	if util.IsValidURL(l) {
 		id := storage.WriteURL(l)
 		w.WriteHeader(http.StatusCreated) //201
-		b := []byte(`http://` + app.ServerUrl + `/` + id)
+		b := []byte(`http://` + app.ServerURL + `/` + id)
 		fmt.Println(string(b))
 		w.Write(b)
 		return
