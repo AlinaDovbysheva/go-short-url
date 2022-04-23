@@ -18,8 +18,8 @@ func TestHandlerServer_HandlerServerMain(t *testing.T) {
 		codepost1 int
 		codeget   int
 	}{
-		{name: "simple http url", value: "https://www.youtube.com/watch?v=C_e-XtC1dDI&t=46s", codepost1: 201, codeget: 307},
-		{name: "simple http url", value: "https://practicum.yandex.ru/learn/go-developer/courses/9dd689b5-2524-42fb-8eef-b4e6797cbea1/sprints/21254/topics/70c00167-d0e3-4f57-a181-b5cb63c13a55/lessons/27c5eb58-ac12-4f1b-a601-5bf8c87b7ea1/", codepost1: 201, codeget: 307},
+		{name: "simple http url", value: "https://www.youtube.com/watch?v=C_e-XtC1dDI&t=499s", codepost1: 201, codeget: 307},
+		//{name: "simple http url", value: "https://practicum.yandex.ru/learn/go-developer/courses/9dd689b5-2524-42fb-8eef-b4e6797cbea1/sprints/21254/topics/70c00167-d0e3-4f57-a181-b5cb63c13a55/lessons/27c5eb58-ac12-4f1b-a601-5bf8c87b7ea1/", codepost1: 201, codeget: 307},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -29,7 +29,7 @@ func TestHandlerServer_HandlerServerMain(t *testing.T) {
 
 			w := httptest.NewRecorder()
 			appH := NewHandlerServer()
-			appH.HandlerServerMain(w, rPost)
+			appH.ServeHTTP(w, rPost)
 			resp := w.Result()
 
 			assert.Equal(t, tt.codepost1, resp.StatusCode)
@@ -40,7 +40,7 @@ func TestHandlerServer_HandlerServerMain(t *testing.T) {
 
 			rGet := httptest.NewRequest(http.MethodGet, string(rGetID), nil)
 			w = httptest.NewRecorder()
-			appH.HandlerServerMain(w, rGet)
+			appH.ServeHTTP(w, rGet)
 			resp = w.Result()
 
 			rGetURL := w.Header().Get("Location")

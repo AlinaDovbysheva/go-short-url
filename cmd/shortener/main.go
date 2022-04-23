@@ -8,10 +8,11 @@ import (
 )
 
 func main() {
-	appHandlerServ := handlers.NewHandlerServer()
-	http.HandleFunc("/", appHandlerServ.HandlerServerMain)
+	appHandler := handlers.NewHandlerServer()
+
 	server := &http.Server{
-		Addr: app.ServerUrl,
+		Addr:    app.ServerUrl,
+		Handler: appHandler,
 	}
 	log.Fatal(server.ListenAndServe())
 }

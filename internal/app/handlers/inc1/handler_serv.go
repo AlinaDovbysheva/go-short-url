@@ -5,36 +5,35 @@ import (
 	"github.com/AlinaDovbysheva/go-short-url/internal/app"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/storage"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/v5/middleware"
 	"io"
 	"net/http"
 	"strings"
 )
 
-type HandlerServer struct {
-	*chi.Mux
-}
+type (
+	HandlerServer struct {
+	}
+)
 
 func NewHandlerServer() *HandlerServer {
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	return &HandlerServer{}
+}
 
-	h := HandlerServer{
-		Mux: r,
+func (h *HandlerServer) HandlerServerMain(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		h.HandlerServerGet(w, r)
+	case http.MethodPost:
+		h.HandlerServerPost(w, r)
+	default:
+		fmt.Fprintf(w, " only GET and POST methods are supported")
+		http.Error(w, "only GET and POST methods are supported", http.StatusBadRequest)
+		//w.WriteHeader(http.StatusBadRequest)  //400
 	}
-
-	h.Get("/{id}", h.HandlerServerGet)
-	h.Post("/", h.HandlerServerPost)
-
-	return &h
 }
 
 func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
+	id := strings.Split(string(r.URL.Path), "/")[1]
 	if id == "" {
 		http.Error(w, "The query parameter is missing", http.StatusBadRequest)
 		return
@@ -46,7 +45,8 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 		return
 	} else {
 		w.Header().Set("Location", urlFind)
-		w.WriteHeader(http.StatusTemporaryRedirect) // 307
+		// 307-http.StatusTemporaryRedirect
+		w.WriteHeader(http.StatusTemporaryRedirect)
 	}
 }
 
