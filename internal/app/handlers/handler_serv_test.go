@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"github.com/AlinaDovbysheva/go-short-url/internal/app"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -23,7 +24,7 @@ func TestHandlerServer_HandlerServerMain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			const urlServ = "http://localhost:8080"
+			const urlServ = app.ServerURL
 			body := bytes.NewBufferString(tt.value)
 			rPost := httptest.NewRequest(http.MethodPost, "/", body)
 
@@ -44,6 +45,8 @@ func TestHandlerServer_HandlerServerMain(t *testing.T) {
 			resp = w.Result()
 
 			rGetURL := w.Header().Get("Location")
+			require.NoError(t, err)
+			err = resp.Body.Close()
 			require.NoError(t, err)
 
 			assert.Equal(t, tt.codeget, resp.StatusCode)

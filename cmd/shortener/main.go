@@ -11,7 +11,7 @@ func main() {
 	appHandler := handlers.NewHandlerServer()
 
 	server := &http.Server{
-		Addr:    app.ServerUrl,
+		Addr:    app.ServerURL,
 		Handler: appHandler,
 	}
 	log.Fatal(server.ListenAndServe())
