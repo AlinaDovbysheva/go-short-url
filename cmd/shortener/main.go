@@ -14,5 +14,6 @@ func main() {
 		Addr:    app.ServerURL,
 		Handler: appHandler,
 	}
+
 	log.Fatal(server.ListenAndServe())
 }

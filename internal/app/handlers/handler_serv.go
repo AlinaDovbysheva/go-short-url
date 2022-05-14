@@ -28,6 +28,7 @@ func NewHandlerServer() *HandlerServer {
 	}
 
 	h.Get("/{id}", h.HandlerServerGet)
+	h.Post("/api/shorten", h.HandlerServerPostJson)
 	h.Post("/", h.HandlerServerPost)
 
 	return &h
@@ -50,6 +51,27 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+func (h *HandlerServer) HandlerServerPostJson(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	u := util.JsontoUrl(body)
+	fmt.Println(string(body) + " url:" + u)
+	if util.IsValidURL(u) {
+		id := storage.WriteURL(u)
+		jsonUrl := util.StrtoJson(`http://` + app.ServerURL + `/` + id)
+		fmt.Println(string(jsonUrl))
+		w.WriteHeader(http.StatusCreated) //201
+		w.Write(jsonUrl)
+		return
+	}
+	fmt.Fprintf(w, "url is not valid "+u)
+	http.Error(w, "url is not valid ", http.StatusBadRequest)
+	//w.WriteHeader(http.StatusBadRequest)  //400
+}
+
 func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request) {
 	link, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -64,9 +86,8 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 		fmt.Println(string(b))
 		w.Write(b)
 		return
-	} else {
-		fmt.Fprintf(w, "url is not valid "+l)
-		http.Error(w, "url is not valid ", http.StatusBadRequest)
-		//w.WriteHeader(http.StatusBadRequest)  //400
 	}
+	fmt.Fprintf(w, "url is not valid "+l)
+	http.Error(w, "url is not valid ", http.StatusBadRequest)
+	//w.WriteHeader(http.StatusBadRequest)  //400
 }

@@ -19,14 +19,14 @@ func TestHandlerServer_HandlerServerMain(t *testing.T) {
 		codepost1 int
 		codeget   int
 	}{
-		{name: "simple http url", value: "https://www.youtube.com/watch?v=C_e-XtC1dDI&t=499s", codepost1: 201, codeget: 307},
+		{name: "simple http url", value: "{\"url\":\"https://www.youtube.com/watch?v=EdufHyUAJt4\"}", codepost1: 201, codeget: 307},
 		//{name: "simple http url", value: "https://practicum.yandex.ru/learn/go-developer/courses/9dd689b5-2524-42fb-8eef-b4e6797cbea1/sprints/21254/topics/70c00167-d0e3-4f57-a181-b5cb63c13a55/lessons/27c5eb58-ac12-4f1b-a601-5bf8c87b7ea1/", codepost1: 201, codeget: 307},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			const urlServ = app.ServerURL
 			body := bytes.NewBufferString(tt.value)
-			rPost := httptest.NewRequest(http.MethodPost, "/", body)
+			rPost := httptest.NewRequest(http.MethodPost, "/api/shorten", body)
 
 			w := httptest.NewRecorder()
 			appH := NewHandlerServer()
