@@ -31,6 +31,7 @@ func NewHandlerServer() *HandlerServer {
 	h.Post("/api/shorten", h.HandlerServerPostJson)
 	h.Post("/", h.HandlerServerPost)
 
+	//storage s
 	return &h
 }
 
@@ -40,15 +41,15 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "The query parameter is missing", http.StatusBadRequest)
 		return
 	}
-	urlFind := storage.FindURLID(id)
+	urlFind := storage.FindURL(id)
 	fmt.Println(urlFind)
 	if urlFind == "" {
 		http.Error(w, "Url not exist", http.StatusBadRequest)
 		return
-	} else {
-		w.Header().Set("Location", urlFind)
-		w.WriteHeader(http.StatusTemporaryRedirect) // 307
 	}
+	w.Header().Set("Location", urlFind)
+	w.WriteHeader(http.StatusTemporaryRedirect) // 307
+
 }
 
 func (h *HandlerServer) HandlerServerPostJson(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +69,7 @@ func (h *HandlerServer) HandlerServerPostJson(w http.ResponseWriter, r *http.Req
 		return
 	}
 	fmt.Fprintf(w, "url is not valid "+u)
-	http.Error(w, "url is not valid ", http.StatusBadRequest)
+	http.Error(w, "Url is not valid ", http.StatusBadRequest)
 	//w.WriteHeader(http.StatusBadRequest)  //400
 }
 
@@ -87,7 +88,7 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 		w.Write(b)
 		return
 	}
-	fmt.Fprintf(w, "url is not valid "+l)
-	http.Error(w, "url is not valid ", http.StatusBadRequest)
+	fmt.Fprintf(w, "Url is not valid "+l)
+	http.Error(w, "Url is not valid ", http.StatusBadRequest)
 	//w.WriteHeader(http.StatusBadRequest)  //400
 }
