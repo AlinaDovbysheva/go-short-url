@@ -59,7 +59,7 @@ func (h *HandlerServer) HandlerServerPostJson(w http.ResponseWriter, r *http.Req
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	u := util.JsontoUrl(body)
+	u := util.JsontoURL(body)
 	fmt.Println(string(body) + " url:" + u)
 	if util.IsValidURL(u) {
 		id := storage.WriteURL(u)

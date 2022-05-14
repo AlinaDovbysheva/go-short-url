@@ -7,20 +7,20 @@ import (
 )
 
 type DBurl interface {
-	GetUrl(shortUrl string) (string, error)
-	PutUrl(inputUrl string) (string, error)
+	GetUrl(shortURL string) (string, error)
+	PutUrl(inputURL string) (string, error)
 }
 
-func GetUrl(shortUrl string) (string, error) {
-	sId := mapUrl[shortUrl]
-	if sId == "" {
-		return "", errors.New("Id is absent in DB")
+func GetUrl(shortURL string) (string, error) {
+	sID := mapUrl[shortURL]
+	if sID == "" {
+		return "", errors.New("id is absent in db")
 	}
-	return sId, nil
+	return sID, nil
 }
 
-func PutUrl(inputUrl string) (string, error) {
-	return WriteURL(inputUrl), nil
+func PutURL(inputURL string) (string, error) {
+	return WriteURL(inputURL), nil
 }
 
 var mapUrl = make(map[string]string)

@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 )
 
-type strUrl struct {
+type strURL struct {
 	Url string `json:"url"`
 }
 
-type strUrlres struct {
+type strURLres struct {
 	Url string `json:"result"`
 }
 
 func StrtoJson(u string) []byte {
-	val := strUrlres{
+	val := strURLres{
 		Url: u,
 	}
 	ju, err := json.Marshal(val)
@@ -23,16 +23,16 @@ func StrtoJson(u string) []byte {
 	return ju
 }
 
-func JsontoUrl(b []byte) string {
-	val := strUrl{}
+func JsontoURL(b []byte) string {
+	val := strURL{}
 	if err := json.Unmarshal([]byte(b), &val); err != nil {
 		panic(err)
 	}
 	return string(string(val.Url))
 }
 
-func JsontoUrlRes(b []byte) string {
-	val := strUrlres{}
+func JsontoURLRes(b []byte) string {
+	val := strURLres{}
 	if err := json.Unmarshal([]byte(b), &val); err != nil {
 		panic(err)
 	}
