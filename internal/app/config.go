@@ -5,8 +5,8 @@ import (
 	"log"
 )
 
-var ServerURL = "localhost:8080"
-var BaseURL = "http://localhost:8080"
+var ServerURL = "localhost:36933"
+var BaseURL = "http://localhost:36933"
 
 type Config struct {
 	ServerAddr string `env:"SERVER_ADDRESS"`
@@ -15,8 +15,8 @@ type Config struct {
 
 func configServerEnv() {
 	var cfg = Config{
-		ServerAddr: "localhost:8080",
-		BaseURL:    "http://localhost:8080",
+		ServerAddr: "localhost:36933",
+		BaseURL:    "http://localhost:36933",
 	}
 	err := env.Parse(&cfg)
 	if err != nil {
