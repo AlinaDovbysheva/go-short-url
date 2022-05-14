@@ -64,6 +64,7 @@ func (h *HandlerServer) HandlerServerPostJson(w http.ResponseWriter, r *http.Req
 		id := storage.WriteURL(u)
 		jsonUrl := util.StrtoJson(`http://` + app.ServerURL + `/` + id)
 		fmt.Println(string(jsonUrl))
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated) //201
 		w.Write(jsonUrl)
 		return
