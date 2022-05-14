@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -25,6 +26,13 @@ func (c *Config) ConfigServerEnv() {
 	BaseURL = "http://" + addr*/
 
 	ServerURL = os.Getenv("SERVER_ADDRESS")
+	if ServerURL == "" {
+		ServerURL = ":8080"
+	}
 	BaseURL = os.Getenv("BASE_URL")
+	if BaseURL == "" {
+		BaseURL = "http://localhost:8080"
+	}
+	fmt.Printf("server start on %s\n", ServerURL)
 
 }

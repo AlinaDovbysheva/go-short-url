@@ -28,7 +28,7 @@ func NewHandlerServer() *HandlerServer {
 	}
 
 	h.Get("/{id}", h.HandlerServerGet)
-	h.Post("/api/shorten", h.HandlerServerPostJson)
+	h.Post("/api/shorten", h.HandlerServerPostJSON)
 	h.Post("/", h.HandlerServerPost)
 
 	//storage s
@@ -53,7 +53,7 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 
 }
 
-func (h *HandlerServer) HandlerServerPostJson(w http.ResponseWriter, r *http.Request) {
+func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -63,11 +63,11 @@ func (h *HandlerServer) HandlerServerPostJson(w http.ResponseWriter, r *http.Req
 	fmt.Println(string(body) + " url:" + u)
 	if util.IsValidURL(u) {
 		id := storage.WriteURL(u)
-		jsonUrl := util.StrtoJSON(app.BaseURL + `/` + id)
-		fmt.Println(string(jsonUrl))
+		jsonURL := util.StrtoJSON(app.BaseURL + `/` + id)
+		fmt.Println(string(jsonURL))
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated) //201
-		w.Write(jsonUrl)
+		w.Write(jsonURL)
 		return
 	}
 	fmt.Fprintf(w, "url is not valid "+u)
