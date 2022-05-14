@@ -40,7 +40,7 @@ func TestHandlerServer_HandlerServerMain(t *testing.T) {
 			err = resp.Body.Close()
 			require.NoError(t, err)
 
-			rGetID := util.JsontoUrlRes(rGetIDjson) //{"result":"<shorten_url>"}
+			rGetID := util.JsontoURLRes(rGetIDjson) //{"result":"<shorten_url>"}
 			rGet := httptest.NewRequest(http.MethodGet, string(rGetID), nil)
 			w = httptest.NewRecorder()
 			appH.ServeHTTP(w, rGet)

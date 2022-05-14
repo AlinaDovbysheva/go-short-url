@@ -8,6 +8,9 @@ import (
 )
 
 func main() {
+	c := app.Config{}
+	c.ConfigServerEnv()
+
 	appHandler := handlers.NewHandlerServer()
 
 	server := &http.Server{
