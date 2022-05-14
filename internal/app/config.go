@@ -5,7 +5,8 @@ import (
 	"log"
 )
 
-var ServerURL = "localhost:36933"
+const ServerURL = "localhost:36933"
+
 var BaseURL = "http://localhost:36933"
 
 type Config struct {
@@ -22,7 +23,7 @@ func configServerEnv() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ServerURL = cfg.ServerAddr
+	//ServerURL = cfg.ServerAddr
 	BaseURL = cfg.BaseURL
 }
 
