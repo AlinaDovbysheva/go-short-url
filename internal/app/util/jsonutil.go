@@ -2,7 +2,6 @@ package util
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 type strUrl struct {
@@ -29,6 +28,13 @@ func JsontoUrl(b []byte) string {
 	if err := json.Unmarshal([]byte(b), &val); err != nil {
 		panic(err)
 	}
-	fmt.Printf("%+v", val)
+	return string(string(val.Url))
+}
+
+func JsontoUrlRes(b []byte) string {
+	val := strUrlres{}
+	if err := json.Unmarshal([]byte(b), &val); err != nil {
+		panic(err)
+	}
 	return string(string(val.Url))
 }

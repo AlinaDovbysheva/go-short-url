@@ -41,10 +41,11 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "The query parameter is missing", http.StatusBadRequest)
 		return
 	}
+	fmt.Println(" id:" + id)
 	urlFind := storage.FindURL(id)
 	fmt.Println(urlFind)
 	if urlFind == "" {
-		http.Error(w, "Url not exist", http.StatusBadRequest)
+		http.Error(w, "Url not exist ", http.StatusBadRequest)
 		return
 	}
 	w.Header().Set("Location", urlFind)

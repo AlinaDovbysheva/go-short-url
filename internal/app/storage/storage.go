@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"fmt"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
 )
 
@@ -25,7 +26,7 @@ func PutUrl(inputUrl string) (string, error) {
 var mapUrl = make(map[string]string)
 
 func WriteURL(url string) (id string) {
-	id = FindURL(url)
+	id = FindURLKey(url)
 	if id == "" {
 		id = util.RandStringBytes(7)
 		mapUrl[id] = url
@@ -33,12 +34,18 @@ func WriteURL(url string) (id string) {
 	return id
 }
 
-func FindURL(url string) (result string) {
-	result = ""
+func FindURL(key string) (result string) {
+	return mapUrl[key]
+}
+
+func FindURLKey(url string) (key string) {
+	key = ""
+	fmt.Println(" mapUrl:")
+	fmt.Println(mapUrl)
 	for k, v := range mapUrl {
 		if v == url {
 			return k
 		}
 	}
-	return result
+	return key
 }

@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app"
+	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -34,11 +35,12 @@ func TestHandlerServer_HandlerServerMain(t *testing.T) {
 			resp := w.Result()
 
 			assert.Equal(t, tt.codepost1, resp.StatusCode)
-			rGetID, err := ioutil.ReadAll(resp.Body)
+			rGetIDjson, err := ioutil.ReadAll(resp.Body)
 			require.NoError(t, err)
 			err = resp.Body.Close()
 			require.NoError(t, err)
 
+			rGetID := util.JsontoUrlRes(rGetIDjson) //{"result":"<shorten_url>"}
 			rGet := httptest.NewRequest(http.MethodGet, string(rGetID), nil)
 			w = httptest.NewRecorder()
 			appH.ServeHTTP(w, rGet)
