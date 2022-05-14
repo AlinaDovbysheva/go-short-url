@@ -15,8 +15,8 @@ type Config struct {
 
 func (c *Config) ConfigServerEnv() {
 
-	flag.IntVar(&c.port, "port", 8080, "port to listen on")
-	flag.StringVar(&c.host, "host", "localhost", "host to listen on")
+	flag.IntVar(&c.port, "SERVER_PORT", 8080, "port to listen on")
+	flag.StringVar(&c.host, "SERVER_HOST", "localhost", "host to listen on")
 	flag.Parse()
 
 	addr := fmt.Sprintf("%s:%d", c.host, c.port)
