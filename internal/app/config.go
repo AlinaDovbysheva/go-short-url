@@ -21,7 +21,7 @@ func (c *Config) ConfigServerEnv() {
 	//flag.Parse()
 	var err error
 	c.port, err = strconv.Atoi(os.Getenv("SERVER_PORT"))
-	if err != nil {
+	if err != nil || c.port < 1025 || c.port > 65535 {
 		c.port = 8080
 	}
 	c.host = os.Getenv("SERVER_HOST")
