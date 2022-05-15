@@ -7,7 +7,7 @@ import (
 
 var ServerURL = ":8080"
 var BaseURL = "http://localhost:8080"
-var FilePath = ""
+var FilePath = "URLdb.log"
 
 type Config struct {
 	port int
@@ -36,7 +36,7 @@ func (c *Config) ConfigServerEnv() {
 	}
 	FilePath = os.Getenv("FILE_STORAGE_PATH")
 	if FilePath == "" {
-		FilePath = ""
+		FilePath = "URLdb.log"
 	}
 
 	fmt.Printf("server start on %s\n", ServerURL)

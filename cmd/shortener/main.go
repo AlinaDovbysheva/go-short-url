@@ -13,10 +13,8 @@ func main() {
 	c := app.Config{}
 	c.ConfigServerEnv()
 
-	db := storage.NewInMap()
-	if app.FilePath != "" {
-		db = storage.NewInFile()
-	}
+	//db := storage.NewInMap()
+	db := storage.NewInFile(app.FilePath)
 
 	h := handlers.NewHandlerServer(db)
 

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"github.com/AlinaDovbysheva/go-short-url/internal/app/storage"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -28,8 +29,11 @@ func TestHandlerServer_HandlerServerMain(t *testing.T) {
 			rPost := httptest.NewRequest(http.MethodPost, "/api/shorten", body)
 
 			w := httptest.NewRecorder()
-			appH := NewHandlerServer()
+			db := storage.NewInMap()
+			th := NewHandlerServer(db)
+			appH := http.HandlerFunc(th.HandlerServerGet)
 			appH.ServeHTTP(w, rPost)
+
 			resp := w.Result()
 
 			assert.Equal(t, tt.codepost1, resp.StatusCode)
