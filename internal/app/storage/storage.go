@@ -5,25 +5,37 @@ import (
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
 )
 
-type DBurl interface {
-	GetURL(shortURL string) (string, error)
-	PutURL(inputURL string) (string, error)
+func NewInMap() DBurl {
+	return &InMap{map[string]string{}}
 }
 
-func GetURL(shortURL string) (string, error) {
-	sID := mapURL[shortURL]
+type InMap struct {
+	mapURL map[string]string
+}
+
+func (m *InMap) GetURL(shortURL string) (string, error) {
+	sID := m.mapURL[shortURL]
 	if sID == "" {
 		return "", errors.New("id is absent in db")
 	}
 	return sID, nil
 }
 
-func PutURL(inputURL string) (string, error) {
-	return WriteURL(inputURL), nil
+func (m *InMap) PutURL(inputURL string) (string, error) {
+	id := ""
+	for k, v := range m.mapURL {
+		if v == inputURL {
+			id = k
+		}
+	}
+	if id == "" {
+		id = util.RandStringBytes(7)
+		m.mapURL[id] = inputURL
+	}
+	return id, nil
 }
 
-var mapURL = make(map[string]string)
-
+/*
 func WriteURL(url string) (id string) {
 	id = FindURLKey(url)
 	if id == "" {
@@ -46,3 +58,4 @@ func FindURLKey(url string) (key string) {
 	}
 	return key
 }
+*/

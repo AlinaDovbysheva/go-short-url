@@ -5,33 +5,33 @@ import (
 	"github.com/AlinaDovbysheva/go-short-url/internal/app"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/storage"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
 	"strings"
 )
 
 type HandlerServer struct {
-	*chi.Mux
+	//chi *chi.Mux
+	s storage.DBurl
 }
 
-func NewHandlerServer() *HandlerServer {
-	r := chi.NewRouter()
+func NewHandlerServer(st storage.DBurl) *HandlerServer {
+	/*r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(middleware.Recoverer)*/
 
 	h := HandlerServer{
-		Mux: r,
+		//chi: r,
+		s: st,
 	}
 
-	h.Get("/{id}", h.HandlerServerGet)
-	h.Post("/api/shorten", h.HandlerServerPostJSON)
-	h.Post("/", h.HandlerServerPost)
+	/*h.chi.Get("/{id}", h.HandlerServerGet)
+	h.chi.Post("/api/shorten", h.HandlerServerPostJSON)
+	h.chi.Post("/", h.HandlerServerPost)*/
 
-	//storage s
 	return &h
 }
 
@@ -42,7 +42,7 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	fmt.Println(" id:" + id)
-	urlFind := storage.FindURL(id)
+	urlFind, _ := h.s.GetURL(id) // storage.FindURL(id)
 	fmt.Println(urlFind)
 	if urlFind == "" {
 		http.Error(w, "Url not exist ", http.StatusBadRequest)
@@ -62,7 +62,7 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 	u := util.JsontoURL(body)
 	fmt.Println(string(body) + " url:" + u)
 	if util.IsValidURL(u) {
-		id := storage.WriteURL(u)
+		id, _ := h.s.PutURL(u) //storage.WriteURL(u)
 		jsonURL := util.StrtoJSON(app.BaseURL + `/` + id)
 		fmt.Println(string(jsonURL))
 		w.Header().Set("Content-Type", "application/json")
@@ -83,7 +83,7 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 	}
 	l := strings.ReplaceAll(string(link), "'", "")
 	if util.IsValidURL(l) {
-		id := storage.WriteURL(l)
+		id, _ := h.s.PutURL(l)            //storage.WriteURL(l)
 		w.WriteHeader(http.StatusCreated) //201
 		b := []byte(app.BaseURL + `/` + id)
 		fmt.Println(string(b))

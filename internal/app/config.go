@@ -7,6 +7,7 @@ import (
 
 var ServerURL = ":8080"
 var BaseURL = "http://localhost:8080"
+var FilePath = ""
 
 type Config struct {
 	port int
@@ -33,6 +34,11 @@ func (c *Config) ConfigServerEnv() {
 	if BaseURL == "" {
 		BaseURL = "http://localhost:8080"
 	}
+	FilePath = os.Getenv("FILE_STORAGE_PATH")
+	if FilePath == "" {
+		FilePath = ""
+	}
+
 	fmt.Printf("server start on %s\n", ServerURL)
 
 }
