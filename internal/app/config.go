@@ -17,13 +17,13 @@ type Config struct {
 
 func (c *Config) ConfigServerEnv() {
 
-	flag.StringVar(&c.port, "a", ":8080", "port to listen on")
-	flag.StringVar(&c.host, "b", "http://localhost:8080", "host to listen on")
+	flag.StringVar(&c.port, "a", "8080", "port to listen on")
+	flag.StringVar(&c.host, "b", "http://localhost", "host to listen on")
 	flag.StringVar(&c.filepath, "f", "db1.log", "file path to storage")
 	flag.Parse()
 
-	ServerURL = c.port
-	BaseURL = c.host
+	ServerURL = ":" + c.port
+	BaseURL = c.host + ":" + c.port
 	FilePath = c.filepath
 
 	fmt.Printf("server start on %s ", ServerURL)
