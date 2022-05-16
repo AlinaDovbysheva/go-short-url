@@ -23,5 +23,5 @@ func main() {
 	r.Post("/api/shorten", h.HandlerServerPostJSON)
 	r.Post("/", h.HandlerServerPost)
 
-	log.Fatal(http.ListenAndServe(app.ServerURL, r))
+	log.Fatal(http.ListenAndServe(app.ServerURL, handlers.GzipHandle(r)))
 }
