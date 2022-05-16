@@ -3,6 +3,7 @@ package app
 import (
 	"flag"
 	"fmt"
+	"os"
 )
 
 var ServerURL = ":8080"
@@ -28,18 +29,17 @@ func (c *Config) ConfigServerEnv() {
 
 	fmt.Printf("server start on %s ", ServerURL)
 
-	/*
-		ServerURL = os.Getenv("SERVER_ADDRESS")
-		if ServerURL == "" {
-			ServerURL = ":8080"
-		}
-		BaseURL = os.Getenv("BASE_URL")
-		if BaseURL == "" {
-			BaseURL = "http://localhost:8080"
-		}
-		FilePath = os.Getenv("FILE_STORAGE_PATH")
-		if FilePath == "" {
-			FilePath = "URLdb.log"
-		}
-	*/
+	ServerURL = os.Getenv("SERVER_ADDRESS")
+	if ServerURL == "" {
+		ServerURL = ":8080"
+	}
+	BaseURL = os.Getenv("BASE_URL")
+	if BaseURL == "" {
+		BaseURL = "http://localhost:8080"
+	}
+	FilePath = os.Getenv("FILE_STORAGE_PATH")
+	if FilePath == "" {
+		FilePath = "URLdb.log"
+	}
+
 }
