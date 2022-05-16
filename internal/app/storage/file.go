@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 )
@@ -18,8 +18,17 @@ func NewInFile(fileName string) DBurl {
 	defer rf.Close()
 
 	m := map[string]string{}
-	byteValue, _ := ioutil.ReadAll(rf)
-	json.Unmarshal([]byte(byteValue), &m)
+
+	dec := json.NewDecoder(rf)
+	for {
+		emp := Event{}
+		if err := dec.Decode(&emp); err == io.EOF {
+			break
+		} else if err != nil {
+			log.Fatal(err)
+		}
+		m[emp.ID] = emp.URL
+	}
 
 	fmt.Println("read from file " + fileName + " to map:")
 	fmt.Println(m)
@@ -37,8 +46,8 @@ type InFile struct {
 	mapURL   map[string]string
 }
 
-func (f *InFile) GetURL(shortURL string) (string, error) {
-	sID := f.mapURL[shortURL]
+func (p *InFile) GetURL(shortURL string) (string, error) {
+	sID := p.mapURL[shortURL]
 	if sID == "" {
 		return "", errors.New("id is absent in db")
 	}
@@ -50,22 +59,25 @@ func (p *InFile) PutURL(inputURL string) (string, error) {
 	for k, v := range p.mapURL {
 		if v == inputURL {
 			id = k
+			fmt.Println(" __find url:")
+			fmt.Println(id)
 		}
 	}
+
 	if id == "" {
 		id = util.RandStringBytes(7)
 		p.mapURL[id] = inputURL
-	}
 
-	//------write to file
-	event := Event{id, inputURL}
-	wf, err := NewWFile(p.fileName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer wf.Close()
-	if err := wf.WriteEvent(event); err != nil {
-		log.Fatal(err)
+		//------write to file
+		event := Event{id, inputURL}
+		wf, err := NewWFile(p.fileName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer wf.Close()
+		if err := wf.WriteEvent(event); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	return id, nil
