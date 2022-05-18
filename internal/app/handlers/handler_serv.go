@@ -13,7 +13,7 @@ import (
 )
 
 type HandlerServer struct {
-	//chi *chi.Mux
+	//Chi *chi.Mux
 	s storage.DBurl
 }
 
@@ -72,7 +72,6 @@ func GzipHandle(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-
 		// создаём gzip.Writer поверх текущего w
 		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
 		if err != nil {
@@ -114,6 +113,7 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 		jsonURL := util.StrtoJSON(app.BaseURL + `/` + id)
 		fmt.Println(string(jsonURL))
 		w.Header().Set("Content-Type", "application/json")
+
 		w.WriteHeader(http.StatusCreated) //201
 		w.Write(jsonURL)
 		return

@@ -18,17 +18,6 @@ type Config struct {
 
 func (c *Config) ConfigServerEnv() {
 
-	flag.StringVar(&c.port, "a", ":8080", "port to listen on")
-	flag.StringVar(&c.host, "b", "http://localhost:8080", "host to listen on")
-	flag.StringVar(&c.filepath, "f", "db1.log", "file path to storage")
-	flag.Parse()
-
-	ServerURL = c.port
-	BaseURL = c.host //+ c.port
-	FilePath = c.filepath
-
-	fmt.Printf("server start on %s ", ServerURL)
-
 	ServerURL = os.Getenv("SERVER_ADDRESS")
 	if ServerURL == "" {
 		ServerURL = ":8080"
@@ -41,5 +30,16 @@ func (c *Config) ConfigServerEnv() {
 	if FilePath == "" {
 		FilePath = "URLdb.log"
 	}
+
+	flag.StringVar(&c.port, "a", ServerURL, "port to listen on")
+	flag.StringVar(&c.host, "b", BaseURL, "host to listen on")
+	flag.StringVar(&c.filepath, "f", FilePath, "file path to storage")
+	flag.Parse()
+
+	ServerURL = c.port
+	BaseURL = c.host //+ c.port
+	FilePath = c.filepath
+
+	fmt.Printf("server start on %s ", ServerURL)
 
 }

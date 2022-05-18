@@ -59,8 +59,6 @@ func (p *InFile) PutURL(inputURL string) (string, error) {
 	for k, v := range p.mapURL {
 		if v == inputURL {
 			id = k
-			fmt.Println(" __find url:")
-			fmt.Println(id)
 		}
 	}
 
