@@ -4,11 +4,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
 	"io"
 	"log"
 	"os"
+	"sync"
+
+	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
 )
+
+type Event struct {
+	ID  string `json:"id"`
+	URL string `json:"url"`
+}
+
+type InFile struct {
+	fileName string
+	mapURL   map[string]string
+	mutex    *sync.Mutex
+}
 
 func NewInFile(fileName string) DBurl {
 	rf, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
@@ -29,21 +42,21 @@ func NewInFile(fileName string) DBurl {
 		}
 		m[emp.ID] = emp.URL
 	}
-
 	fmt.Println("read from file " + fileName + " to map:")
 	fmt.Println(m)
-
 	return &InFile{fileName: fileName, mapURL: m}
 }
 
-type Event struct {
-	ID  string `json:"id"`
-	URL string `json:"url"`
+func (m *InFile) Close() error {
+	return nil
 }
 
-type InFile struct {
-	fileName string
-	mapURL   map[string]string
+func (m *InFile) PingDB() error {
+	return nil
+}
+
+func (m *InFile) GetAllURLUid(UID string) ([]byte, error) {
+	return nil, nil
 }
 
 func (p *InFile) GetURL(shortURL string) (string, error) {
@@ -54,7 +67,7 @@ func (p *InFile) GetURL(shortURL string) (string, error) {
 	return sID, nil
 }
 
-func (p *InFile) PutURL(inputURL string) (string, error) {
+func (p *InFile) PutURL(inputURL string, UID string) (string, error) {
 	id := ""
 	for k, v := range p.mapURL {
 		if v == inputURL {
@@ -64,7 +77,10 @@ func (p *InFile) PutURL(inputURL string) (string, error) {
 
 	if id == "" {
 		id = util.RandStringBytes(7)
+
+		//p.mutex.Lock()
 		p.mapURL[id] = inputURL
+		//p.mutex.Unlock()
 
 		//------write to file
 		event := Event{id, inputURL}
@@ -73,9 +89,11 @@ func (p *InFile) PutURL(inputURL string) (string, error) {
 			log.Fatal(err)
 		}
 		defer wf.Close()
+		//p.mutex.Lock()
 		if err := wf.WriteEvent(event); err != nil {
 			log.Fatal(err)
 		}
+		//p.mutex.Unlock()
 	}
 
 	return id, nil
@@ -96,9 +114,11 @@ func NewWFile(fileName string) (*WFile, error) {
 		encoder: json.NewEncoder(file),
 	}, nil
 }
+
 func (p *WFile) WriteEvent(event Event) error {
 	return p.encoder.Encode(&event)
 }
+
 func (p *WFile) Close() error {
 	return p.file.Close()
 }

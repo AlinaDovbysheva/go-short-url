@@ -3,60 +3,120 @@ package handlers
 import (
 	"compress/gzip"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/AlinaDovbysheva/go-short-url/internal/app"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/storage"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
 	"github.com/go-chi/chi/v5"
-	"io"
-	"net/http"
-	"strings"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
+type gzipWriter struct {
+	http.ResponseWriter
+	Writer io.Writer
+}
+
 type HandlerServer struct {
-	//Chi *chi.Mux
-	s storage.DBurl
+	Chi *chi.Mux
+	s   storage.DBurl
 }
 
 func NewHandlerServer(st storage.DBurl) *HandlerServer {
-	/*r := chi.NewRouter()
+	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)*/
+	r.Use(middleware.Recoverer)
 
 	h := HandlerServer{
-		//chi: r,
-		s: st,
+		Chi: r,
+		s:   st,
 	}
 
-	/*h.chi.Get("/{id}", h.HandlerServerGet)
-	h.chi.Post("/api/shorten", h.HandlerServerPostJSON)
-	h.chi.Post("/", h.HandlerServerPost)*/
-
+	h.Chi.Get("/api/user/urls", h.HandlerServerGetUrls)
+	//h.Chi.Get("/ping/", h.HandlerServerGetPingDB)
+	h.Chi.Get("/{id}", h.HandlerServerGet)
+	h.Chi.Post("/api/shorten", h.HandlerServerPostJSON)
+	h.Chi.Post("/", h.HandlerServerPost)
 	return &h
+}
+
+/*
+func (h *HandlerServer) HandlerServerGetPingDB(w http.ResponseWriter, r *http.Request) {
+	c := app.Config{}
+	err := c.PingDB()
+	fmt.Printf("PING DB !!!")
+	if err != nil {
+		fmt.Printf("PING DB %s", err)
+		http.Error(w, "internal Server Error ", http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError) //500
+		return
+	}
+	w.WriteHeader(http.StatusOK) //200
+}*/
+
+func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Request) {
+	//set Cookie
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		expiration := time.Now().Add(365 * 24 * time.Hour)
+		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
+		http.SetCookie(w, &cookieNew)
+		cookie = &cookieNew
+	}
+
+	urlsFind, _ := h.s.GetAllURLUid(cookie.Value) // storage.FindURL(id)
+	fmt.Println(urlsFind)
+	if urlsFind == nil {
+		http.Error(w, "Url not exist ", http.StatusBadRequest)
+		w.WriteHeader(http.StatusNoContent) //204
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated) //201
+	w.Write(urlsFind)
 }
 
 func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, "The query parameter is missing", http.StatusBadRequest)
+		//return util.ErrHandler400
+	}
+	if id == "ping" { //!!! пришлось сюда добавить, хотела отдельной функцией
+		err := h.s.PingDB()
+		if err != nil {
+			http.Error(w, "internal Server Error ", http.StatusBadRequest)
+			w.WriteHeader(http.StatusInternalServerError) //500
+			return
+		}
+		w.WriteHeader(http.StatusOK) //200
 		return
 	}
-	fmt.Println(" id:" + id)
+	// set Cookie
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		expiration := time.Now().Add(365 * 24 * time.Hour)
+		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
+		http.SetCookie(w, &cookieNew)
+		cookie = &cookieNew
+	}
+
 	urlFind, _ := h.s.GetURL(id) // storage.FindURL(id)
 	fmt.Println(urlFind)
 	if urlFind == "" {
 		http.Error(w, "Url not exist ", http.StatusBadRequest)
-		return
+		//return util.ErrHandler400
 	}
+
+	fmt.Printf("token: %v\n", cookie.Value)
 	w.Header().Set("Location", urlFind)
 	w.WriteHeader(http.StatusTemporaryRedirect) // 307
-
-}
-
-type gzipWriter struct {
-	http.ResponseWriter
-	Writer io.Writer
 }
 
 func (w gzipWriter) Write(b []byte) (int, error) {
@@ -92,35 +152,42 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 		gz, err := gzip.NewReader(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			//return util.ErrHandler500
 		}
 		reader = gz
 		defer gz.Close()
 	} else {
 		reader = r.Body
 	}
-	body, err := io.ReadAll(reader)
 
-	//body, err := io.ReadAll(r.Body)
+	// set Cookie
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		expiration := time.Now().Add(365 * 24 * time.Hour)
+		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
+		http.SetCookie(w, &cookieNew)
+		cookie = &cookieNew
+	}
+
+	body, err := io.ReadAll(reader)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
-		return
+		//return util.ErrHandler500
 	}
+
 	u := util.JsontoURL(body)
-	fmt.Println(string(body) + " url:" + u)
+	fmt.Println(" url:" + u)
 	if util.IsValidURL(u) {
-		id, _ := h.s.PutURL(u) //storage.WriteURL(u)
+		id, _ := h.s.PutURL(u, cookie.Value)
 		jsonURL := util.StrtoJSON(app.BaseURL + `/` + id)
 		fmt.Println(string(jsonURL))
 		w.Header().Set("Content-Type", "application/json")
-
 		w.WriteHeader(http.StatusCreated) //201
 		w.Write(jsonURL)
 		return
 	}
 	fmt.Fprintf(w, "url is not valid "+u)
-	http.Error(w, "Url is not valid ", http.StatusBadRequest)
-	//w.WriteHeader(http.StatusBadRequest)  //400
+	//return util.ErrHandler500
 }
 
 func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request) {
@@ -129,10 +196,19 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), 500)
 		return
 	}
+	// set Cookie
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		expiration := time.Now().Add(365 * 24 * time.Hour)
+		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
+		http.SetCookie(w, &cookieNew)
+		cookie = &cookieNew
+	}
+
 	l := strings.ReplaceAll(string(link), "'", "")
 	if util.IsValidURL(l) {
-		id, _ := h.s.PutURL(l)            //storage.WriteURL(l)
-		w.WriteHeader(http.StatusCreated) //201
+		id, _ := h.s.PutURL(l, cookie.Value) //
+		w.WriteHeader(http.StatusCreated)    //201
 		b := []byte(app.BaseURL + `/` + id)
 		fmt.Println(string(b))
 		w.Write(b)
@@ -142,3 +218,9 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 	http.Error(w, "Url is not valid ", http.StatusBadRequest)
 	//w.WriteHeader(http.StatusBadRequest)  //400
 }
+
+/*
+func setCookie(r *http.Request) (*Cookie, error)
+{
+
+} */
