@@ -6,7 +6,6 @@
 CREATE TABLE IF NOT EXISTS users(
                       id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                       user_id uuid NOT NULL,
-                      key text NOT NULL DEFAULT gen_salt('md5'),
                       uname VARCHAR ( 255 ) NULL,
                       last_login TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
