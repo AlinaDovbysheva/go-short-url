@@ -111,7 +111,7 @@ func (m *InPostgres) GetURL(shortURL string) (string, error) {
 	return mUid.URL, nil
 }
 
-func (m *InPostgres) PutURL(inputURL string, UID string) (string, error) {
+func (m *InPostgres) PutURL(inputURL string, UID string) (string, []byte, error) {
 
 	short := util.RandStringBytes(9)
 
@@ -122,24 +122,29 @@ func (m *InPostgres) PutURL(inputURL string, UID string) (string, error) {
 		err = m.db.QueryRow("INSERT INTO users(user_id) VALUES($1) RETURNING id ", UID).Scan(&idu)
 		if err != nil {
 			fmt.Println("INSERT INTO users= ", err)
-			return "", err
+			return "", nil, err
 		}
 	}
+	var errExist error
+	errExist = nil
 	err = m.db.QueryRow("select id,url_short from url where url = $1", inputURL).Scan(&ids, &short)
 	if err != nil {
 		err = m.db.QueryRow("INSERT INTO url(url,url_short)  VALUES($1,$2)  RETURNING id", inputURL, short).Scan(&ids)
 		if err != nil {
 			fmt.Println("INSERT INTO url(url,url_short)= %s , %s ", inputURL, short, err)
-			return "", err
+			return "", nil, err
 		}
 		_, err = m.db.Exec("INSERT INTO users_url(user_id,url_id)  VALUES($1,$2) ", idu, ids)
 		if err != nil {
 			fmt.Println("INSERT INTO users_url(user_id,url_id)= ", err)
-			return "", err
+			return "", nil, err
 		}
+	} else {
+		errExist = util.ErrHandler409
 	}
 
-	return short, nil
+	d := util.StrtoJSON(app.BaseURL + `/` + short)
+	return short, d, errExist
 }
 
 func (m *InPostgres) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error) {

@@ -2,10 +2,8 @@ package util
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/rand"
-	"net/http"
 	"net/url"
 )
 
@@ -39,26 +37,4 @@ func IsValidURL(toTest string) bool {
 		return false
 	}
 	return true
-}
-
-var (
-	ErrHandler404    = errors.New("not found")
-	ErrHandler400    = errors.New("bad request")
-	ErrHandler500    = errors.New("internal server error")
-	ErrAlreadyExists = errors.New("already exists")
-)
-
-func storageErrToStatus(err error) int {
-	switch err {
-	case ErrAlreadyExists:
-		return http.StatusConflict
-	case ErrHandler500:
-		return http.StatusInternalServerError
-	case ErrHandler404:
-		return http.StatusNotFound
-	case ErrHandler400:
-		return http.StatusBadRequest
-	default:
-		return http.StatusInternalServerError
-	}
 }

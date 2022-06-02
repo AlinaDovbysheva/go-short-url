@@ -2,7 +2,7 @@ package storage
 
 type DBurl interface {
 	GetURL(shortURL string) (string, error)
-	PutURL(inputURL string, UID string) (string, error)
+	PutURL(inputURL string, UID string) (string, []byte, error)
 	GetAllURLUid(UID string) ([]byte, error)
 
 	// in- array(json) of original url out-array(json) of short url

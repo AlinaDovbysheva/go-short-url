@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -179,11 +180,14 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 	u := util.JsontoURL(body)
 	fmt.Println(" url:" + u)
 	if util.IsValidURL(u) {
-		id, _ := h.s.PutURL(u, cookie.Value)
-		jsonURL := util.StrtoJSON(app.BaseURL + `/` + id)
+		_, jsonURL, err := h.s.PutURL(u, cookie.Value)
+		if errors.Is(err, util.ErrHandler409) {
+			w.WriteHeader(util.StorageErrToStatus(util.ErrHandler409)) //409
+		} else {
+			w.WriteHeader(http.StatusCreated) //201
+		}
 		fmt.Println(string(jsonURL))
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated) //201
 		w.Write(jsonURL)
 		return
 	}
@@ -254,8 +258,8 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 
 	l := strings.ReplaceAll(string(link), "'", "")
 	if util.IsValidURL(l) {
-		id, _ := h.s.PutURL(l, cookie.Value) //
-		w.WriteHeader(http.StatusCreated)    //201
+		id, _, _ := h.s.PutURL(l, cookie.Value) //
+		w.WriteHeader(http.StatusCreated)       //201
 		b := []byte(app.BaseURL + `/` + id)
 		fmt.Println(string(b))
 		w.Write(b)

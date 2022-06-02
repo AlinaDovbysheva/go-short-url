@@ -54,7 +54,7 @@ func (m *InMap) GetURL(shortURL string) (string, error) {
 	return sID, nil
 }
 
-func (m *InMap) PutURL(inputURL string, UID string) (string, error) {
+func (m *InMap) PutURL(inputURL string, UID string) (string, []byte, error) {
 	id := ""
 	for k, v := range m.mapURL {
 		if v == inputURL {
@@ -71,7 +71,8 @@ func (m *InMap) PutURL(inputURL string, UID string) (string, error) {
 	// save UID and Url as history query
 	m.mUid = append(m.mUid, mapURLUid{UID, app.BaseURL + `/` + id, inputURL})
 
-	return id, nil
+	d := util.StrtoJSON(app.BaseURL + `/` + id)
+	return id, d, nil
 }
 
 func (m *InMap) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error) {

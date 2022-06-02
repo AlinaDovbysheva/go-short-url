@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/AlinaDovbysheva/go-short-url/internal/app"
 	"io"
 	"log"
 	"os"
@@ -67,7 +68,7 @@ func (p *InFile) GetURL(shortURL string) (string, error) {
 	return sID, nil
 }
 
-func (p *InFile) PutURL(inputURL string, UID string) (string, error) {
+func (p *InFile) PutURL(inputURL string, UID string) (string, []byte, error) {
 	id := ""
 	for k, v := range p.mapURL {
 		if v == inputURL {
@@ -95,8 +96,8 @@ func (p *InFile) PutURL(inputURL string, UID string) (string, error) {
 		}
 		//p.mutex.Unlock()
 	}
-
-	return id, nil
+	d := util.StrtoJSON(app.BaseURL + `/` + id)
+	return id, d, nil
 }
 
 func (m *InFile) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error) {
