@@ -150,7 +150,7 @@ func GzipHandle(next http.Handler) http.Handler {
 
 func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Request) {
 	var reader io.Reader
-	if r.Header.Get(`Content-Encoding`) == `gzip` {
+	/*if r.Header.Get(`Content-Encoding`) == `gzip` {
 		gz, err := gzip.NewReader(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -160,7 +160,9 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 		defer gz.Close()
 	} else {
 		reader = r.Body
-	}
+	}*/
+
+	reader = r.Body
 
 	// set Cookie
 	cookie, err := r.Cookie("token")
