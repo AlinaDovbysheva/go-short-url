@@ -1,10 +1,12 @@
 package storage
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"fmt"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
 	_ "github.com/lib/pq"
+	"math/big"
 	"time"
 
 	"encoding/json"
@@ -124,10 +126,12 @@ func (m *InPostgres) PutURL(inputURL string, UID string) (string, []byte, error)
 	}
 	var errExist error
 	errExist = nil
-	short := util.RandStringBytes(12)
+	short := ""
 	err = m.db.QueryRow("select id,url_short from url where url = $1", inputURL).Scan(&ids, &short)
+	fmt.Println("1 Select url_short if exist=", short)
 	if err != nil {
-
+		ns, _ := rand.Int(rand.Reader, big.NewInt(10000000)) //util.RandStringBytes(24)
+		short = ns.String()
 		err = m.db.QueryRow("INSERT INTO url(url,url_short)  VALUES($1,$2)  RETURNING id", inputURL, short).Scan(&ids)
 		if err != nil {
 			fmt.Println("INSERT INTO url(url,url_short)= %s , %s ", inputURL, short, err)
@@ -166,13 +170,14 @@ func (m *InPostgres) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error
 	}
 
 	for _, v := range valUrl {
-		short := util.RandStringBytes(12)
+		short := ""
 		inputURL := v.URL
 		cor := v.Correlation_id
 		err = m.db.QueryRow("select id,url_short from url where url = $1", inputURL).Scan(&ids, &short)
-		fmt.Println("Select url_short if exist=", short)
+		fmt.Println("2 Select url_short if exist=", short)
 		if err != nil {
-
+			ns, _ := rand.Int(rand.Reader, big.NewInt(10000000)) //util.RandStringBytes(24)
+			short = ns.String()
 			err = m.db.QueryRow("INSERT INTO url(url,url_short)  VALUES($1,$2)  RETURNING id", inputURL, short).Scan(&ids)
 			if err != nil {
 				fmt.Println("INSERT INTO url(url,url_short)= %s , %s ", inputURL, short, err)
