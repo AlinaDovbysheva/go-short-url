@@ -143,7 +143,6 @@ func (m *InPostgres) PutURL(inputURL string, UID string) (string, []byte, error)
 			return "", nil, err
 		}
 	} else {
-		fmt.Println("util.ErrHandler409=", util.ErrHandler409)
 		errExist = util.ErrHandler409
 	}
 

@@ -183,6 +183,7 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 	fmt.Println(" url:" + u)
 	if util.IsValidURL(u) {
 		_, jsonURL, err := h.s.PutURL(u, cookie.Value)
+		fmt.Println("err=", err, "util.ErrHandler409=", util.ErrHandler409)
 		if errors.Is(err, util.ErrHandler409) {
 			w.WriteHeader(util.StorageErrToStatus(util.ErrHandler409)) //409
 		} else {
