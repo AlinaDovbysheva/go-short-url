@@ -40,7 +40,6 @@ func (m *InMap) GetAllURLUid(UID string) ([]byte, error) {
 			mUid = append(mUid, mapURLUid{v.Uid, v.URLShort, v.URL})
 		}
 	}
-
 	data, _ := json.Marshal(mUid)
 	return data, nil
 }

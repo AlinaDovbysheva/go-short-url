@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
 	_ "github.com/lib/pq"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"time"
 
 	"encoding/json"
@@ -53,13 +50,15 @@ func NewInPostgre() DBurl {
 	if err != nil {
 		fmt.Println(err)
 	}
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[1]))
-	path := filepath.Join(dir, "dbshortnerPG.sql")
-	query, err := ioutil.ReadFile(path)
-	if err != nil {
-		fmt.Println(err)
-	}
-	if _, err := db.Exec(string(query)); err != nil {
+	/*
+		// read DB structure from file
+		dir, _ := filepath.Abs(filepath.Dir(os.Args[1]))
+		path := filepath.Join(dir, "dbshortnerPG.sql")
+		query, err := ioutil.ReadFile(path)
+		if err != nil {
+			fmt.Println(err)
+		}*/
+	if _, err := db.Exec(string(BDNew)); err != nil {
 		fmt.Println(err)
 	}
 
@@ -187,3 +186,5 @@ func (m *InPostgres) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error
 }
 
 func (m *InPostgres) Close() error { return m.db.Close() }
+
+var BDNew = "-- Database: DB_shortner\n\n-- DROP DATABASE IF EXISTS \"DB_shortner\";\n--create extension pgcrypto;\n\nCREATE TABLE IF NOT EXISTS users(\n                      id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n                      user_id uuid NOT NULL,\n                      key text NOT NULL DEFAULT gen_salt('md5'),\n                      uname VARCHAR ( 255 ) NULL,\n                      last_login TIMESTAMPTZ NOT NULL DEFAULT NOW()\n);\n\nCREATE TABLE IF NOT EXISTS url (\n                     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n                     url VARCHAR ( 255 ) UNIQUE NOT NULL,\n                     url_short VARCHAR ( 255 ) UNIQUE NOT NULL,\n                     created_on TIMESTAMP NOT NULL  DEFAULT NOW()\n);\n\n\nCREATE TABLE IF NOT EXISTS users_url (\n                           url_id INT NOT NULL,\n                           user_id INT NOT NULL,\n                           FOREIGN KEY(url_id)\n                               REFERENCES url(id)\n                               ON DELETE SET NULL,\n\n                           FOREIGN KEY (user_id)\n                               REFERENCES users (id)\n);\n\n\n\n"

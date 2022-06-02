@@ -72,6 +72,7 @@ func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Requ
 	}
 
 	urlsFind, _ := h.s.GetAllURLUid(cookie.Value) // storage.FindURL(id)
+	fmt.Println("all url for user : ", string(urlsFind))
 	if urlsFind == nil {
 		http.Error(w, "Url not exist ", http.StatusBadRequest)
 		w.WriteHeader(http.StatusNoContent) //204
