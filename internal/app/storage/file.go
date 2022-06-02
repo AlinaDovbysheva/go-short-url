@@ -99,6 +99,10 @@ func (p *InFile) PutURL(inputURL string, UID string) (string, error) {
 	return id, nil
 }
 
+func (m *InFile) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error) {
+	return nil, nil
+}
+
 type WFile struct {
 	file    *os.File
 	encoder *json.Encoder

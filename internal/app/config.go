@@ -30,9 +30,9 @@ func (c *Config) ConfigServerEnv() {
 		BaseURL = "http://localhost:8080"
 	}
 	FilePath = os.Getenv("FILE_STORAGE_PATH")
-	if FilePath == "" {
+	/*if FilePath == "" {
 		FilePath = "" //"URLdb.log"
-	}
+	}*/
 
 	DatabaseDsn = os.Getenv("DATABASE_DSN")
 	/*if DatabaseDsn == "" {

@@ -42,6 +42,8 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 	h.Chi.Get("/{id}", h.HandlerServerGet)
 	h.Chi.Post("/api/shorten", h.HandlerServerPostJSON)
 	h.Chi.Post("/", h.HandlerServerPost)
+	h.Chi.Post("/api/shorten/batch", h.HandlerServerPostJSONArray)
+
 	return &h
 }
 
@@ -70,13 +72,11 @@ func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Requ
 	}
 
 	urlsFind, _ := h.s.GetAllURLUid(cookie.Value) // storage.FindURL(id)
-	fmt.Println(urlsFind)
 	if urlsFind == nil {
 		http.Error(w, "Url not exist ", http.StatusBadRequest)
 		w.WriteHeader(http.StatusNoContent) //204
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated) //201
 	w.Write(urlsFind)
@@ -190,6 +190,52 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 	//return util.ErrHandler500
 }
 
+func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *http.Request) {
+	var reader io.Reader
+	if r.Header.Get(`Content-Encoding`) == `gzip` {
+		gz, err := gzip.NewReader(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			//return util.ErrHandler500
+		}
+		reader = gz
+		defer gz.Close()
+	} else {
+		reader = r.Body
+	}
+
+	// set Cookie
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		expiration := time.Now().Add(365 * 24 * time.Hour)
+		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
+		http.SetCookie(w, &cookieNew)
+		cookie = &cookieNew
+	}
+
+	body, err := io.ReadAll(reader)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		//return util.ErrHandler500
+	}
+	fmt.Println(" body ", string(body))
+	jsonURL, err := h.s.PutURLArray(body, cookie.Value)
+	if err != nil {
+		fmt.Fprintf(w, "can't make short url "+string(body))
+		w.WriteHeader(http.StatusBadRequest) //400
+		return
+	}
+	if jsonURL != nil {
+		fmt.Println(string(jsonURL))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated) //201
+		w.Write(jsonURL)
+		return
+	}
+	fmt.Fprintf(w, "can't make short url "+string(body))
+	w.WriteHeader(http.StatusBadRequest) //400
+}
+
 func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request) {
 	link, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -216,7 +262,7 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 	}
 	fmt.Fprintf(w, "Url is not valid "+l)
 	http.Error(w, "Url is not valid ", http.StatusBadRequest)
-	//w.WriteHeader(http.StatusBadRequest)  //400
+	w.WriteHeader(http.StatusBadRequest) //400
 }
 
 /*

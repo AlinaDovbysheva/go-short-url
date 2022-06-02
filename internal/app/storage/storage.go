@@ -74,3 +74,7 @@ func (m *InMap) PutURL(inputURL string, UID string) (string, error) {
 
 	return id, nil
 }
+
+func (m *InMap) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error) {
+	return nil, nil
+}
