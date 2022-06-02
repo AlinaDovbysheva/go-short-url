@@ -261,7 +261,7 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 
 	l := strings.ReplaceAll(string(link), "'", "")
 	if util.IsValidURL(l) {
-		id, _, _ := h.s.PutURL(l, cookie.Value) //
+		id, _, err := h.s.PutURL(l, cookie.Value) //
 		if errors.Is(err, util.ErrHandler409) {
 			w.WriteHeader(util.StorageErrToStatus(util.ErrHandler409)) //409
 		} else {
