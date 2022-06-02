@@ -150,7 +150,7 @@ func GzipHandle(next http.Handler) http.Handler {
 
 func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Request) {
 	var reader io.Reader
-	/*if r.Header.Get(`Content-Encoding`) == `gzip` {
+	if r.Header.Get(`Content-Encoding`) == `gzip` {
 		gz, err := gzip.NewReader(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -160,9 +160,9 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 		defer gz.Close()
 	} else {
 		reader = r.Body
-	}*/
+	}
 
-	reader = r.Body
+	//reader = r.Body
 
 	// set Cookie
 	cookie, err := r.Cookie("token")
@@ -183,7 +183,6 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 	fmt.Println(" url:" + u)
 	if util.IsValidURL(u) {
 		_, jsonURL, err := h.s.PutURL(u, cookie.Value)
-		fmt.Println("err=", err, "util.ErrHandler409=", util.ErrHandler409)
 		if errors.Is(err, util.ErrHandler409) {
 			w.WriteHeader(util.StorageErrToStatus(util.ErrHandler409)) //409
 		} else {
@@ -269,10 +268,10 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 		}
 		b := []byte(app.BaseURL + `/` + id)
 		fmt.Println(string(b))
+		w.Header().Set("Content-Type", "application/json")
 		w.Write(b)
 		return
 	}
-	fmt.Fprintf(w, "Url is not valid "+l)
 	http.Error(w, "Url is not valid ", http.StatusBadRequest)
 	w.WriteHeader(http.StatusBadRequest) //400
 }
