@@ -179,7 +179,7 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 	u := util.JsontoURL(body)
 	fmt.Println(" url:" + u)
 	if util.IsValidURL(u) {
-		_, jsonURL, _ := h.s.PutURL(u, cookie.Value)
+		_, jsonURL, err := h.s.PutURL(u, cookie.Value)
 		fmt.Println(string(jsonURL))
 		w.Header().Set("Content-Type", "application/json")
 		if errors.Is(err, util.ErrHandler409) {
