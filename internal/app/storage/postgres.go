@@ -162,10 +162,11 @@ func (m *InPostgres) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error
 	}
 
 	for _, v := range valUrl {
-		short := util.RandStringBytes(9)
+		short := util.RandStringBytes(12)
 		inputURL := v.URL
 		cor := v.Correlation_id
 		err = m.db.QueryRow("select id,url_short from url where url = $1", inputURL).Scan(&ids, &short)
+		fmt.Println("Select url_short if exist=", short)
 		if err != nil {
 			err = m.db.QueryRow("INSERT INTO url(url,url_short)  VALUES($1,$2)  RETURNING id", inputURL, short).Scan(&ids)
 			if err != nil {
