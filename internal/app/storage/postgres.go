@@ -129,7 +129,7 @@ func (m *InPostgres) PutURL(inputURL string, UID string) (string, []byte, error)
 	short := ""
 	err = m.db.QueryRow("select id,url_short from url where url = $1", inputURL).Scan(&ids, &short)
 	fmt.Println("1 Select url_short if exist=", short)
-	if err != nil {
+	if short == "" {
 		ns, _ := rand.Int(rand.Reader, big.NewInt(10000000)) //util.RandStringBytes(24)
 		short = ns.String()
 		err = m.db.QueryRow("INSERT INTO url(url,url_short)  VALUES($1,$2)  RETURNING id", inputURL, short).Scan(&ids)
@@ -143,6 +143,7 @@ func (m *InPostgres) PutURL(inputURL string, UID string) (string, []byte, error)
 			return "", nil, err
 		}
 	} else {
+		fmt.Println("util.ErrHandler409=", util.ErrHandler409)
 		errExist = util.ErrHandler409
 	}
 
