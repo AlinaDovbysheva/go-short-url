@@ -112,9 +112,6 @@ func (m *InPostgres) GetURL(shortURL string) (string, error) {
 }
 
 func (m *InPostgres) PutURL(inputURL string, UID string) (string, []byte, error) {
-
-	short := util.RandStringBytes(9)
-
 	var idu int64
 	var ids int64
 	err := m.db.QueryRow("select id from users where user_id = $1", UID).Scan(&idu)
@@ -127,8 +124,10 @@ func (m *InPostgres) PutURL(inputURL string, UID string) (string, []byte, error)
 	}
 	var errExist error
 	errExist = nil
+	var short string
 	err = m.db.QueryRow("select id,url_short from url where url = $1", inputURL).Scan(&ids, &short)
 	if err != nil {
+		short := util.RandStringBytes(12)
 		err = m.db.QueryRow("INSERT INTO url(url,url_short)  VALUES($1,$2)  RETURNING id", inputURL, short).Scan(&ids)
 		if err != nil {
 			fmt.Println("INSERT INTO url(url,url_short)= %s , %s ", inputURL, short, err)
