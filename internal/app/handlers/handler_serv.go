@@ -181,13 +181,12 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 	if util.IsValidURL(u) {
 		_, jsonURL, _ := h.s.PutURL(u, cookie.Value)
 		fmt.Println(string(jsonURL))
-		//if errors.Is(err, util.ErrHandler409) {
-		//	w.WriteHeader(util.StorageErrToStatus(util.ErrHandler409)) //409
-		//} else {
-
-		//}
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated) //201
+		if errors.Is(err, util.ErrHandler409) {
+			w.WriteHeader(http.StatusConflict) //util.StorageErrToStatus(util.ErrHandler409)) //409
+		} else {
+			w.WriteHeader(http.StatusCreated) //201
+		}
 		w.Write(jsonURL)
 		return
 	}
