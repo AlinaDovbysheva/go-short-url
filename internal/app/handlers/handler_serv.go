@@ -161,9 +161,6 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 	} else {
 		reader = r.Body
 	}
-
-	//reader = r.Body
-
 	// set Cookie
 	cookie, err := r.Cookie("token")
 	if err != nil {
@@ -182,12 +179,12 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 	u := util.JsontoURL(body)
 	fmt.Println(" url:" + u)
 	if util.IsValidURL(u) {
-		_, jsonURL, err := h.s.PutURL(u, cookie.Value)
-		if errors.Is(err, util.ErrHandler409) {
-			w.WriteHeader(util.StorageErrToStatus(util.ErrHandler409)) //409
-		} else {
-			w.WriteHeader(http.StatusCreated) //201
-		}
+		_, jsonURL, _ := h.s.PutURL(u, cookie.Value)
+		//if errors.Is(err, util.ErrHandler409) {
+		//	w.WriteHeader(util.StorageErrToStatus(util.ErrHandler409)) //409
+		//} else {
+		w.WriteHeader(http.StatusCreated) //201
+		//}
 		fmt.Println(string(jsonURL))
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(jsonURL)
@@ -227,7 +224,6 @@ func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *htt
 	}
 	fmt.Println(" body ", string(body))
 	jsonURL, err := h.s.PutURLArray(body, cookie.Value)
-	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		fmt.Fprintf(w, "can't make short url "+string(body))
 		w.WriteHeader(http.StatusBadRequest) //400
@@ -235,6 +231,7 @@ func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *htt
 	}
 	if jsonURL != nil {
 		fmt.Println(string(jsonURL))
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated) //201
 		w.Write(jsonURL)
 		return
@@ -259,7 +256,6 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 	}
 
 	l := strings.ReplaceAll(string(link), "'", "")
-	w.Header().Set("Content-Type", "application/json")
 	if util.IsValidURL(l) {
 		id, _, err := h.s.PutURL(l, cookie.Value) //
 		if errors.Is(err, util.ErrHandler409) {
