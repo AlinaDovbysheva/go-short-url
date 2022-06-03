@@ -48,20 +48,6 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 	return &h
 }
 
-/*
-func (h *HandlerServer) HandlerServerGetPingDB(w http.ResponseWriter, r *http.Request) {
-	c := app.Config{}
-	err := c.PingDB()
-	fmt.Printf("PING DB !!!")
-	if err != nil {
-		fmt.Printf("PING DB %s", err)
-		http.Error(w, "internal Server Error ", http.StatusBadRequest)
-		w.WriteHeader(http.StatusInternalServerError) //500
-		return
-	}
-	w.WriteHeader(http.StatusOK) //200
-}*/
-
 func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Request) {
 	//set Cookie
 	cookie, err := r.Cookie("token")
@@ -74,12 +60,12 @@ func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Requ
 
 	urlsFind, _ := h.s.GetAllURLUid(cookie.Value) // storage.FindURL(id)
 	fmt.Println("all url for user : ", string(urlsFind))
+	w.Header().Set("Content-Type", "application/json")
 	if urlsFind == nil {
 		http.Error(w, "Url not exist ", http.StatusBadRequest)
 		w.WriteHeader(http.StatusNoContent) //204
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated) //201
 	w.Write(urlsFind)
 }
@@ -207,7 +193,6 @@ func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *htt
 	} else {
 		reader = r.Body
 	}
-
 	// set Cookie
 	cookie, err := r.Cookie("token")
 	if err != nil {
