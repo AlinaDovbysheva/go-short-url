@@ -4,15 +4,16 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/AlinaDovbysheva/go-short-url/internal/app"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/storage"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"io"
-	"net/http"
-	"strings"
-	"time"
 )
 
 type gzipWriter struct {
@@ -31,7 +32,6 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	//r.Use(SetCookie())
 
 	h := HandlerServer{
 		Chi: r,
@@ -50,9 +50,7 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 
 func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Request) {
 	//set Cookie
-	cookie, _ := r.Cookie("token")
-	// set Cookie
-	_, err := r.Cookie("token")
+	cookie, err := r.Cookie("token")
 	if err != nil {
 		expiration := time.Now().Add(365 * 24 * time.Hour)
 		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
@@ -61,12 +59,13 @@ func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Requ
 	}
 
 	urlsFind, err := h.s.GetAllURLUid(cookie.Value) // storage.FindURL(id)
-	w.Header().Set("Content-Type", "application/json")
+	fmt.Println("all url for user : ", string(urlsFind))
 	if err != nil {
-		http.Error(w, "url not exist ", http.StatusNoContent)
+		http.Error(w, "Url not exist ", http.StatusBadRequest)
 		w.WriteHeader(http.StatusNoContent) //204
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated) //201
 	w.Write(urlsFind)
 }
@@ -88,7 +87,13 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	// set Cookie
-	cookie, _ := r.Cookie("token")
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		expiration := time.Now().Add(365 * 24 * time.Hour)
+		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
+		http.SetCookie(w, &cookieNew)
+		cookie = &cookieNew
+	}
 
 	urlFind, _ := h.s.GetURL(id) // storage.FindURL(id)
 	fmt.Println(urlFind)
@@ -135,22 +140,21 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 		gz, err := gzip.NewReader(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			//return util.ErrHandler500
 		}
 		reader = gz
 		defer gz.Close()
 	} else {
 		reader = r.Body
 	}
-
 	// set Cookie
 	cookie, err := r.Cookie("token")
-	/*if err != nil {
+	if err != nil {
 		expiration := time.Now().Add(365 * 24 * time.Hour)
 		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
 		http.SetCookie(w, &cookieNew)
 		cookie = &cookieNew
-	}*/
+	}
 
 	body, err := io.ReadAll(reader)
 	if err != nil {
@@ -161,7 +165,7 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 	u := util.JsontoURL(body)
 	fmt.Println(" url:" + u)
 	if util.IsValidURL(u) {
-		_, jsonURL, err := h.s.PutURL(u, cookie.Value)
+		_, jsonURL, _ := h.s.PutURL(u, cookie.Value)
 		fmt.Println(string(jsonURL))
 		w.Header().Set("Content-Type", "application/json")
 		if errors.Is(err, util.ErrHandler409) {
@@ -189,8 +193,15 @@ func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *htt
 	} else {
 		reader = r.Body
 	}
+
 	// set Cookie
 	cookie, err := r.Cookie("token")
+	if err != nil {
+		expiration := time.Now().Add(365 * 24 * time.Hour)
+		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
+		http.SetCookie(w, &cookieNew)
+		cookie = &cookieNew
+	}
 
 	body, err := io.ReadAll(reader)
 	if err != nil {
@@ -216,29 +227,21 @@ func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *htt
 }
 
 func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request) {
-	var reader io.Reader
-	if r.Header.Get(`Content-Encoding`) == `gzip` {
-		gz, err := gzip.NewReader(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		reader = gz
-		defer gz.Close()
-	} else {
-		reader = r.Body
-	}
-
-	body, err := io.ReadAll(reader)
+	link, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
-		//return util.ErrHandler500
+		return
 	}
-
 	// set Cookie
 	cookie, err := r.Cookie("token")
+	if err != nil {
+		expiration := time.Now().Add(365 * 24 * time.Hour)
+		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
+		http.SetCookie(w, &cookieNew)
+		cookie = &cookieNew
+	}
 
-	l := strings.ReplaceAll(string(body), "'", "")
+	l := strings.ReplaceAll(string(link), "'", "")
 	if util.IsValidURL(l) {
 		id, _, err := h.s.PutURL(l, cookie.Value) //
 		if errors.Is(err, util.ErrHandler409) {
