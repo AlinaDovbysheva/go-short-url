@@ -61,7 +61,7 @@ func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Requ
 	urlsFind, err := h.s.GetAllURLUid(cookie.Value) // storage.FindURL(id)
 	fmt.Println("all url for user : ", string(urlsFind))
 	if err != nil {
-		http.Error(w, "Url not exist ", http.StatusBadRequest)
+		//http.Error(w, "Url not exist ", http.StatusNoContent)
 		w.WriteHeader(http.StatusNoContent) //204
 		return
 	}
@@ -140,7 +140,6 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 		gz, err := gzip.NewReader(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			//return util.ErrHandler500
 		}
 		reader = gz
 		defer gz.Close()
@@ -159,13 +158,12 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 	body, err := io.ReadAll(reader)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
-		//return util.ErrHandler500
 	}
 
 	u := util.JsontoURL(body)
 	fmt.Println(" url:" + u)
 	if util.IsValidURL(u) {
-		_, jsonURL, _ := h.s.PutURL(u, cookie.Value)
+		_, jsonURL, err := h.s.PutURL(u, cookie.Value)
 		fmt.Println(string(jsonURL))
 		w.Header().Set("Content-Type", "application/json")
 		if errors.Is(err, util.ErrHandler409) {
@@ -186,7 +184,6 @@ func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *htt
 		gz, err := gzip.NewReader(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			//return util.ErrHandler500
 		}
 		reader = gz
 		defer gz.Close()
@@ -227,11 +224,24 @@ func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *htt
 }
 
 func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request) {
-	link, err := io.ReadAll(r.Body)
+	var reader io.Reader
+	if r.Header.Get(`Content-Encoding`) == `gzip` {
+		gz, err := gzip.NewReader(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			//return util.ErrHandler500
+		}
+		reader = gz
+		defer gz.Close()
+	} else {
+		reader = r.Body
+	}
+	body, err := io.ReadAll(reader)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
-		return
+		//return util.ErrHandler500
 	}
+
 	// set Cookie
 	cookie, err := r.Cookie("token")
 	if err != nil {
@@ -241,7 +251,7 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 		cookie = &cookieNew
 	}
 
-	l := strings.ReplaceAll(string(link), "'", "")
+	l := strings.ReplaceAll(string(body), "'", "")
 	if util.IsValidURL(l) {
 		id, _, err := h.s.PutURL(l, cookie.Value) //
 		if errors.Is(err, util.ErrHandler409) {
