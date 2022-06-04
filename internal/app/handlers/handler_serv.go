@@ -32,6 +32,7 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(CookieHandle)
 
 	h := HandlerServer{
 		Chi: r,
@@ -48,25 +49,31 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 	return &h
 }
 
+func CookieHandle(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := r.Cookie("token")
+		if err != nil {
+			expiration := time.Now().Add(365 * 24 * time.Hour)
+			cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
+			http.SetCookie(w, &cookieNew)
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Request) {
 	//set Cookie
 	cookie, err := r.Cookie("token")
-	if err != nil {
-		expiration := time.Now().Add(365 * 24 * time.Hour)
-		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
-		http.SetCookie(w, &cookieNew)
-		cookie = &cookieNew
-	}
 
+	fmt.Println("cookie.Value : ", cookie.Value)
 	urlsFind, err := h.s.GetAllURLUid(cookie.Value) // storage.FindURL(id)
 	fmt.Println("all url for user : ", string(urlsFind))
 	if err != nil {
-		//http.Error(w, "Url not exist ", http.StatusNoContent)
 		w.WriteHeader(http.StatusNoContent) //204
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated) //201
+	w.WriteHeader(http.StatusOK) //200
 	w.Write(urlsFind)
 }
 
@@ -267,9 +274,3 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 	http.Error(w, "Url is not valid ", http.StatusBadRequest)
 	w.WriteHeader(http.StatusBadRequest) //400
 }
-
-/*
-func setCookie(r *http.Request) (*Cookie, error)
-{
-
-} */
