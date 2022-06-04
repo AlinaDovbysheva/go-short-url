@@ -40,6 +40,9 @@ func (m *InMap) GetAllURLUid(UID string) ([]byte, error) {
 			mUid = append(mUid, mapURLUid{v.Uid, v.URLShort, v.URL})
 		}
 	}
+	if len(mUid) < 1 {
+		return nil, errors.New("urls is absent in db")
+	}
 	data, _ := json.Marshal(mUid)
 	return data, nil
 }

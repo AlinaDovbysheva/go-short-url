@@ -91,10 +91,13 @@ func (m *InPostgres) GetAllURLUid(UID string) ([]byte, error) {
 		bk.URLShort = app.BaseURL + `/` + bk.URLShort
 		mUid = append(mUid, bk)
 	}
-
 	defer rows.Close()
+
+	if len(mUid) < 1 {
+		return nil, errors.New("urls is absent in db")
+	}
+
 	data, _ := json.Marshal(mUid)
-	fmt.Println("GetAllURLUid data= ", string(data))
 	return data, nil
 }
 

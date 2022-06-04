@@ -32,4 +32,5 @@ func main() {
 	h := handlers.NewHandlerServer(db)
 
 	log.Fatal(http.ListenAndServe(app.ServerURL, handlers.GzipHandle(h.Chi)))
+
 }
