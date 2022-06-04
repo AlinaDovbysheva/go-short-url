@@ -26,11 +26,10 @@ func main() {
 		fmt.Printf("server start on %s store in file %s\n", app.ServerURL, app.FilePath)
 	} else {
 		db = storage.NewInMap()
-		fmt.Printf("server start on %s store in memory\n", app.ServerURL)
+		fmt.Printf("server start on %s store in memory", app.ServerURL)
 	}
 
 	h := handlers.NewHandlerServer(db)
 
 	log.Fatal(http.ListenAndServe(app.ServerURL, handlers.GzipHandle(h.Chi)))
-
 }

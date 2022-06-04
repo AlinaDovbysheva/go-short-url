@@ -4,16 +4,15 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
-	"strings"
-	"time"
-
 	"github.com/AlinaDovbysheva/go-short-url/internal/app"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/storage"
 	"github.com/AlinaDovbysheva/go-short-url/internal/app/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"io"
+	"net/http"
+	"strings"
+	"time"
 )
 
 type gzipWriter struct {
@@ -32,7 +31,6 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(GzipHandle)
 
 	h := HandlerServer{
 		Chi: r,
