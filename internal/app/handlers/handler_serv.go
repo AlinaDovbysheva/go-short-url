@@ -31,6 +31,7 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	//r.Use(SetCookie())
 
 	h := HandlerServer{
 		Chi: r,
@@ -50,6 +51,14 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Request) {
 	//set Cookie
 	cookie, _ := r.Cookie("token")
+	// set Cookie
+	_, err := r.Cookie("token")
+	if err != nil {
+		expiration := time.Now().Add(365 * 24 * time.Hour)
+		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
+		http.SetCookie(w, &cookieNew)
+		cookie = &cookieNew
+	}
 
 	urlsFind, err := h.s.GetAllURLUid(cookie.Value) // storage.FindURL(id)
 	w.Header().Set("Content-Type", "application/json")
@@ -113,14 +122,6 @@ func GzipHandle(next http.Handler) http.Handler {
 			return
 		}
 		defer gz.Close()
-
-		// set Cookie
-		_, err = r.Cookie("token")
-		if err != nil {
-			expiration := time.Now().Add(365 * 24 * time.Hour)
-			cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
-			http.SetCookie(w, &cookieNew)
-		}
 
 		w.Header().Set("Content-Encoding", "gzip")
 		// передаём обработчику страницы переменную типа gzipWriter для вывода данных
