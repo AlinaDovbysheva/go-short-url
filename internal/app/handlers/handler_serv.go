@@ -52,20 +52,29 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 func CookieHandle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := r.Cookie("token")
+		nc := NewCookie()
+
 		if err != nil {
-			expiration := time.Now().Add(365 * 24 * time.Hour)
-			cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
-			http.SetCookie(w, &cookieNew)
+			r.AddCookie(nc)
+			http.SetCookie(w, nc)
+			fmt.Println("1. cookie.Value : ", nc.Value)
 		}
 		next.ServeHTTP(w, r)
 	})
 }
 
+func NewCookie() *http.Cookie {
+	nc := util.NewCookie()
+	expiration := time.Now().Add(365 * 24 * time.Hour)
+	cookieNew := &http.Cookie{Name: "token", Value: nc, Expires: expiration}
+	return cookieNew
+}
+
 func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Request) {
 	//set Cookie
 	cookie, err := r.Cookie("token")
-
 	fmt.Println("cookie.Value : ", cookie.Value)
+
 	urlsFind, err := h.s.GetAllURLUid(cookie.Value) // storage.FindURL(id)
 	fmt.Println("all url for user : ", string(urlsFind))
 	if err != nil {
@@ -94,13 +103,8 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	// set Cookie
-	cookie, err := r.Cookie("token")
-	if err != nil {
-		expiration := time.Now().Add(365 * 24 * time.Hour)
-		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
-		http.SetCookie(w, &cookieNew)
-		cookie = &cookieNew
-	}
+	cookie, _ := r.Cookie("token")
+	fmt.Println(" cookie.Value : ", cookie.Value)
 
 	urlFind, _ := h.s.GetURL(id) // storage.FindURL(id)
 	fmt.Println(urlFind)
@@ -155,12 +159,7 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 	}
 	// set Cookie
 	cookie, err := r.Cookie("token")
-	if err != nil {
-		expiration := time.Now().Add(365 * 24 * time.Hour)
-		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
-		http.SetCookie(w, &cookieNew)
-		cookie = &cookieNew
-	}
+	fmt.Println(" cookie.Value : ", cookie.Value)
 
 	body, err := io.ReadAll(reader)
 	if err != nil {
@@ -198,21 +197,16 @@ func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *htt
 		reader = r.Body
 	}
 
-	// set Cookie
-	cookie, err := r.Cookie("token")
-	if err != nil {
-		expiration := time.Now().Add(365 * 24 * time.Hour)
-		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
-		http.SetCookie(w, &cookieNew)
-		cookie = &cookieNew
-	}
-
 	body, err := io.ReadAll(reader)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		//return util.ErrHandler500
 	}
 	fmt.Println(" body ", string(body))
+
+	cookie, err := r.Cookie("token")
+	fmt.Println(" cookie.Value : ", cookie.Value)
+
 	jsonURL, err := h.s.PutURLArray(body, cookie.Value)
 	if err != nil {
 		fmt.Fprintf(w, "can't make short url "+string(body))
@@ -248,15 +242,9 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), 500)
 		//return util.ErrHandler500
 	}
-
 	// set Cookie
 	cookie, err := r.Cookie("token")
-	if err != nil {
-		expiration := time.Now().Add(365 * 24 * time.Hour)
-		cookieNew := http.Cookie{Name: "token", Value: util.NewCookie(), Expires: expiration}
-		http.SetCookie(w, &cookieNew)
-		cookie = &cookieNew
-	}
+	fmt.Println(" cookie.Value : ", cookie.Value)
 
 	l := strings.ReplaceAll(string(body), "'", "")
 	if util.IsValidURL(l) {
