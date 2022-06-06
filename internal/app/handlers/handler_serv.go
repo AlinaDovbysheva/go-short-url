@@ -40,7 +40,6 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 	}
 
 	h.Chi.Get("/api/user/urls", h.HandlerServerGetUrls)
-	//h.Chi.Get("/ping/", h.HandlerServerGetPingDB)
 	h.Chi.Get("/{id}", h.HandlerServerGet)
 	h.Chi.Post("/api/shorten", h.HandlerServerPostJSON)
 	h.Chi.Post("/", h.HandlerServerPost)
@@ -57,7 +56,7 @@ func CookieHandle(next http.Handler) http.Handler {
 		if err != nil {
 			r.AddCookie(nc)
 			http.SetCookie(w, nc)
-			fmt.Println("1. cookie.Value : ", nc.Value)
+			fmt.Println("New cookie.Value : ", nc.Value)
 		}
 		next.ServeHTTP(w, r)
 	})
@@ -90,9 +89,8 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, "The query parameter is missing", http.StatusBadRequest)
-		//return util.ErrHandler400
 	}
-	if id == "ping" { //!!! пришлось сюда добавить, хотела отдельной функцией
+	if id == "ping" {
 		err := h.s.PingDB()
 		if err != nil {
 			http.Error(w, "internal Server Error ", http.StatusBadRequest)
@@ -181,7 +179,6 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 		return
 	}
 	fmt.Fprintf(w, "url is not valid "+u)
-	//return util.ErrHandler500
 }
 
 func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *http.Request) {
@@ -230,7 +227,6 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 		gz, err := gzip.NewReader(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			//return util.ErrHandler500
 		}
 		reader = gz
 		defer gz.Close()
