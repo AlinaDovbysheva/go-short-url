@@ -1,120 +1,35 @@
-
 package main
 
 import (
-	"math/rand"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
 	"log"
-	"strings"
+	"net/http"
+
+	"github.com/AlinaDovbysheva/go-short-url/internal/app"
+	"github.com/AlinaDovbysheva/go-short-url/internal/app/handlers"
+	"github.com/AlinaDovbysheva/go-short-url/internal/app/storage"
 )
 
-type urlItem struct {
-    ID string 
-    URL string 
-}
-
-var urls []urlItem
-
-func writeURL(id string, url string){
-	item := urlItem{ID: id, URL: url}
-	urls = append(urls, item)
-}
-
-func findURL(id string) (result string){
-	result = ""
-	for _, row := range urls{
-		if row.ID == id {
-			result = row.URL
-			break
-		}
-	}
-	return result
- }
- 
- const letterBytes = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
- func RandStringBytes(n int) string {
-	 b := make([]byte, n)
-	 for i := range b {
-		 b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	 }
-	 return string(b)
- }
-
-func isValidURL(toTest string) bool {
-	_, err := url.ParseRequestURI(toTest)
-	if err != nil {
-		return false
-	}
-	u, err := url.Parse(toTest)
-	if err != nil || u.Scheme == "" || u.Host == "" {
-		return false
-	}
-	return true
-}
-
-
-func GetR2(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:		
-		id := strings.Split(string(r.URL.Path),"/")[1]
-		if id == "" {
-			http.Error(w, "The query parameter is missing", http.StatusBadRequest)
-			return
-		}
-		fmt.Println(findURL(id))
-		urlFind:=findURL(id)
-		if urlFind=="" {
-			http.Error(w, "url not exist", http.StatusBadRequest)
-			return
-		}else{
-			w.Header().Set("Location", urlFind)
-			// 307-http.StatusTemporaryRedirect  200 -http.StatusOK
-			w.WriteHeader(http.StatusTemporaryRedirect)
-		}
-		
-
-	case http.MethodPost:
-		fmt.Println("post")
-		link, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), 500)
-			return
-		}
-		l:=strings.ReplaceAll(string(link), "'", "")
-		if isValidURL(l){
-
-			id:=RandStringBytes(7)
-			writeURL(id,l)
-			w.WriteHeader(http.StatusCreated)
-			b:=[]byte(`http://localhost:8080/`+id)
-			w.Write(b)
-
-		} else {
-			fmt.Fprintf(w, "url is not valid "+l)
-			http.Error(w, "url is not valid ", http.StatusBadRequest)
-			//w.WriteHeader(http.StatusBadRequest)  //400
-		}
-		
-	default:
-		fmt.Fprintf(w, " only GET and POST methods are supported")
-		http.Error(w, "only GET and POST methods are supported", http.StatusBadRequest)
-		//w.WriteHeader(http.StatusBadRequest)  //400
-	}
-}
-
-
 func main() {
+	c := app.Config{}
+	c.ConfigServerEnv()
 
-	writeURL("12","https://pkg.go.dev/net/http")
+	var db storage.DBurl
 
-	http.HandleFunc("/",GetR2)
+	if app.DatabaseDsn != "" {
+		db = storage.NewInPostgre()
+		fmt.Printf("server start on %s  db %s\n", app.ServerURL, app.DatabaseDsn)
+		defer db.Close()
 
-    server := &http.Server{
-        Addr: "localhost:8080",
-    }
-    log.Fatal(server.ListenAndServe())
-} 
+	} else if app.FilePath != "" {
+		db = storage.NewInFile(app.FilePath)
+		fmt.Printf("server start on %s store in file %s\n", app.ServerURL, app.FilePath)
+	} else {
+		db = storage.NewInMap()
+		fmt.Printf("server start on %s store in memory\n", app.ServerURL)
+	}
+
+	h := handlers.NewHandlerServer(db)
+
+	log.Fatal(http.ListenAndServe(app.ServerURL, handlers.GzipHandle(h.Chi)))
+}
