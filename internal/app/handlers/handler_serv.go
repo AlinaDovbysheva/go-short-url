@@ -50,9 +50,12 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 
 func CookieHandle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := r.Cookie("token")
+		cookie, err := r.Cookie("token")
 		nc := NewCookie()
 
+		if cookie != nil {
+			fmt.Println("* cookie.Value : ", cookie.Value)
+		}
 		if err != nil {
 			r.AddCookie(nc)
 			http.SetCookie(w, nc)
@@ -101,7 +104,7 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	// set Cookie
-	cookie, _ := r.Cookie("token")
+	cookie, err := r.Cookie("token")
 	fmt.Println(" id : ", id)
 	fmt.Println(" cookie.Value : ", cookie.Value)
 

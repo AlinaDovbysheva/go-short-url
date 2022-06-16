@@ -116,7 +116,7 @@ func (m *InPostgres) GetURL(shortURL string, UID string) (string, error) {
 	err := m.db.QueryRow(context.Background(), "select ur.url, ur.url_short, u.deleted from users_url u "+
 		"INNER JOIN url ur on u.url_id=ur.id "+
 		"INNER JOIN users us on u.user_id=us.id "+
-		"where us.user_id=$1 and ur.url_short=$2", UID, shortURL).
+		"where ur.url_short=$1 and us.user_id=$2 ", shortURL, UID). //and us.user_id=$2
 		Scan(&mUid.URL, &mUid.URLShort, &mUid.Deleted)
 	if err != nil {
 		return "", util.ErrHandler400
