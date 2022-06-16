@@ -224,9 +224,10 @@ func (m *InPostgres) DelURLArray(inputURLJSON []byte, UID string) error {
 		fmt.Println("User not exists in DB UID="+UID, err)
 		return err
 	}
-	vUrl := strings.ReplaceAll(strings.ReplaceAll(string(inputURLJSON), "\"", ""), " ", "")
+	vUrl := strings.ReplaceAll(string(inputURLJSON), " ", "")
 	vUrl = strings.ReplaceAll(strings.ReplaceAll(vUrl, "[", ""), "]", "")
-	valUrl := strings.Split(vUrl, ",")
+
+	valUrl := strings.Split(strings.ReplaceAll(vUrl, "\"", ""), ",")
 	fmt.Println("Split url short ", valUrl)
 	if len(valUrl) > 20 {
 		// batch
@@ -247,7 +248,7 @@ func (m *InPostgres) DelURLArray(inputURLJSON []byte, UID string) error {
 		br.Close()
 	} else {
 		// обновляем одним запросом, списком
-		vUrl := strings.ReplaceAll(strings.ReplaceAll(string(inputURLJSON), "\"", "'"), " ", "")
+		vUrl := strings.ReplaceAll(string(inputURLJSON), "\"", "'")
 		query := "UPDATE users_url set deleted=true where " +
 			"url_id in (select id from url where url_short in (" + vUrl +
 			") ) and user_id=$1"
