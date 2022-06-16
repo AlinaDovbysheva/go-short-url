@@ -59,8 +59,14 @@ func (m *InFile) PingDB() error {
 func (m *InFile) GetAllURLUid(UID string) ([]byte, error) {
 	return nil, nil
 }
+func (m *InFile) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error) {
+	return nil, nil
+}
+func (m *InFile) DelURLArray(inputURLJSON []byte, UID string) error {
+	return nil
+}
 
-func (p *InFile) GetURL(shortURL string) (string, error) {
+func (p *InFile) GetURL(shortURL string, UID string) (string, error) {
 	sID := p.mapURL[shortURL]
 	if sID == "" {
 		return "", errors.New("id is absent in db")
@@ -98,10 +104,6 @@ func (p *InFile) PutURL(inputURL string, UID string) (string, []byte, error) {
 	}
 	d := util.StrtoJSON(app.BaseURL + `/` + id)
 	return id, d, nil
-}
-
-func (m *InFile) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error) {
-	return nil, nil
 }
 
 type WFile struct {

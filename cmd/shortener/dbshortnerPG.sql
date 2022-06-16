@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS url (
 CREATE TABLE IF NOT EXISTS users_url (
                            url_id INT NOT NULL,
                            user_id INT NOT NULL,
+                           deleted bool not null  DEFAULT  false,
                            FOREIGN KEY(url_id)
                                REFERENCES url(id)
                                ON DELETE SET NULL,

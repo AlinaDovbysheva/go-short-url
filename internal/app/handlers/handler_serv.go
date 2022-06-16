@@ -44,7 +44,7 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 	h.Chi.Post("/api/shorten", h.HandlerServerPostJSON)
 	h.Chi.Post("/", h.HandlerServerPost)
 	h.Chi.Post("/api/shorten/batch", h.HandlerServerPostJSONArray)
-
+	h.Chi.Post("/api/user/urls", h.HandlerServerPostDelArray)
 	return &h
 }
 
@@ -102,13 +102,18 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 	}
 	// set Cookie
 	cookie, _ := r.Cookie("token")
+	fmt.Println(" id : ", id)
 	fmt.Println(" cookie.Value : ", cookie.Value)
 
-	urlFind, _ := h.s.GetURL(id) // storage.FindURL(id)
+	urlFind, err := h.s.GetURL(id, cookie.Value) // storage.FindURL(id)
 	fmt.Println(urlFind)
-	if urlFind == "" {
-		http.Error(w, "Url not exist ", http.StatusBadRequest)
-		//return util.ErrHandler400
+	if errors.Is(err, util.ErrHandler410) {
+		w.WriteHeader(util.StorageErrToStatus(util.ErrHandler410)) //410
+		return
+	}
+	if errors.Is(err, util.ErrHandler400) {
+		w.WriteHeader(util.StorageErrToStatus(util.ErrHandler400))
+		return
 	}
 
 	fmt.Printf("token: %v\n", cookie.Value)
@@ -219,6 +224,37 @@ func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *htt
 	}
 	fmt.Fprintf(w, "can't make short url "+string(body))
 	w.WriteHeader(http.StatusBadRequest) //400
+}
+
+func (h *HandlerServer) HandlerServerPostDelArray(w http.ResponseWriter, r *http.Request) {
+	var reader io.Reader
+	if r.Header.Get(`Content-Encoding`) == `gzip` {
+		gz, err := gzip.NewReader(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		reader = gz
+		defer gz.Close()
+	} else {
+		reader = r.Body
+	}
+
+	body, err := io.ReadAll(reader)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	}
+	fmt.Println(" body ", string(body))
+
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		fmt.Println(" cookie not exist : ", err)
+	} else {
+		fmt.Println(" cookie.Value : ", cookie.Value)
+	}
+
+	go h.s.DelURLArray(body, cookie.Value)
+
+	w.WriteHeader(http.StatusAccepted) //202
 }
 
 func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request) {

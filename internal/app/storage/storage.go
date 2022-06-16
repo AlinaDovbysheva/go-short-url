@@ -47,7 +47,7 @@ func (m *InMap) GetAllURLUid(UID string) ([]byte, error) {
 	return data, nil
 }
 
-func (m *InMap) GetURL(shortURL string) (string, error) {
+func (m *InMap) GetURL(shortURL string, UID string) (string, error) {
 	m.mutex.Lock()
 	sID := m.mapURL[shortURL]
 	m.mutex.Unlock()
@@ -80,4 +80,7 @@ func (m *InMap) PutURL(inputURL string, UID string) (string, []byte, error) {
 
 func (m *InMap) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error) {
 	return nil, nil
+}
+func (m *InMap) DelURLArray(inputURLJSON []byte, UID string) error {
+	return nil
 }
