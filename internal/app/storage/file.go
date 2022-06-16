@@ -95,7 +95,7 @@ func (p *InFile) PutURL(inputURL string, UID string) (string, []byte, error) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer wf.Close()
+		defer wf.CloseWFile()
 		//p.mutex.Lock()
 		if err := wf.WriteEvent(event); err != nil {
 			log.Fatal(err)
@@ -126,7 +126,7 @@ func (p *WFile) WriteEvent(event Event) error {
 	return p.encoder.Encode(&event)
 }
 
-func (p *WFile) Close() error {
+func (p *WFile) CloseWFile() error {
 	return p.file.Close()
 }
 
@@ -152,6 +152,6 @@ func (c *RFile) ReadEvent() (*Event, error) {
 	}
 	return event, nil
 }
-func (c *RFile) Close() error {
+func (c *RFile) CloseRFile() error {
 	return c.file.Close()
 }

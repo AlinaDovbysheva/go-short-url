@@ -45,6 +45,7 @@ func TestHandlerServer_DelArray(t *testing.T) {
 
 			resp := w.Result()
 			assert.Equal(t, tt.codepost1, resp.StatusCode)
+			_ = resp.Body.Close()
 
 		})
 	}

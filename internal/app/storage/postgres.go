@@ -16,13 +16,13 @@ import (
 )
 
 type strURLMem struct {
-	URL            string `json:"original_url"`
-	Correlation_id string `json:"correlation_id"`
+	URL           string `json:"original_url"`
+	CorrelationID string `json:"correlation_id"`
 }
 
 type strURLMemOut struct {
-	URL            string `json:"short_url"`
-	Correlation_id string `json:"correlation_id"`
+	URL           string `json:"short_url"`
+	CorrelationID string `json:"correlation_id"`
 }
 
 type InPostgres struct {
@@ -145,14 +145,14 @@ func (m *InPostgres) PutURL(inputURL string, UID string) (string, []byte, error)
 	var errExist error
 	errExist = nil
 	short := ""
-	err = m.db.QueryRow(ctx, "select id,url_short from url where url = $1", inputURL).Scan(&ids, &short)
+	_ = m.db.QueryRow(ctx, "select id,url_short from url where url = $1", inputURL).Scan(&ids, &short)
 	fmt.Println("1 Select url_short if exist=", short)
 	if short == "" {
 		ns, _ := rand.Int(rand.Reader, big.NewInt(10000000)) //util.RandStringBytes(24)
 		short = ns.String()
 		err = m.db.QueryRow(ctx, "INSERT INTO url(url,url_short)  VALUES($1,$2)  RETURNING id", inputURL, short).Scan(&ids)
 		if err != nil {
-			fmt.Println("INSERT INTO url(url,url_short)= %s , %s ", inputURL, short, err)
+			fmt.Println("INSERT INTO url(url,url_short)=", inputURL, short, err)
 			return "", nil, err
 		}
 		_, err = m.db.Exec(ctx, "INSERT INTO users_url(user_id,url_id)  VALUES($1,$2) ", idu, ids)
@@ -189,7 +189,7 @@ func (m *InPostgres) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error
 	for _, v := range valURL {
 		short := ""
 		inputURL := v.URL
-		cor := v.Correlation_id
+		cor := v.CorrelationID
 		err = m.db.QueryRow(ctx, "select id,url_short from url where url = $1", inputURL).Scan(&ids, &short)
 		fmt.Println("2 Select url_short if exist=", short)
 		if err != nil {
@@ -197,7 +197,7 @@ func (m *InPostgres) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error
 			short = ns.String()
 			err = m.db.QueryRow(ctx, "INSERT INTO url(url,url_short)  VALUES($1,$2)  RETURNING id", inputURL, short).Scan(&ids)
 			if err != nil {
-				fmt.Println("INSERT INTO url(url,url_short)= %s , %s ", inputURL, short, err)
+				fmt.Println("INSERT INTO url(url,url_short)= ", inputURL, short, err)
 				return nil, err
 			}
 			_, err = m.db.Exec(ctx, "INSERT INTO users_url(user_id,url_id)  VALUES($1,$2) ", idu, ids)
@@ -241,7 +241,7 @@ func (m *InPostgres) DelURLArray(inputURLJSON []byte, UID string) error {
 			fmt.Println("Not Updated users_url(user_id,url_id) ", err)
 		}
 		if ct.RowsAffected() != 1 {
-			fmt.Println("ct.RowsAffected() => %v, want %v", ct.RowsAffected(), 1)
+			fmt.Println("ct.RowsAffected()", ct.RowsAffected())
 		}
 		br.Close()
 
