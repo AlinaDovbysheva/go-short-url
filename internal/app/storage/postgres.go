@@ -248,7 +248,7 @@ func (m *InPostgres) DelURLArray(inputURLJSON []byte, UID string) error {
 		br.Close()
 	} else {
 		// обновляем одним запросом, списком
-		vUrl := strings.ReplaceAll(string(inputURLJSON), "\"", "'")
+		vUrl := strings.ReplaceAll(vUrl, "\"", "'")
 		query := "UPDATE users_url set deleted=true where " +
 			"url_id in (select id from url where url_short in (" + vUrl +
 			") ) and user_id=$1"

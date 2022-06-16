@@ -1,6 +1,7 @@
 package app
 
 import (
+	"database/sql"
 	"flag"
 	"os"
 )
@@ -49,4 +50,16 @@ func (c *Config) ConfigServerEnv() {
 	FilePath = c.filepath
 	DatabaseDsn = c.databasedsn
 	//fmt.Printf("server start on %s  file set to %s /n", ServerURL, FilePath)
+}
+
+func (c *Config) PingDB() error {
+	db, err := sql.Open("postgres", c.databasedsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	if err := db.Ping(); err != nil {
+		return err
+	}
+	return nil
 }

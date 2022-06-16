@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -14,7 +15,10 @@ func TestMain_ServerMain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
+			main()
+			var err error
+			err = nil
+			require.NoError(t, err)
 		})
 	}
 }
