@@ -44,18 +44,15 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 	h.Chi.Post("/api/shorten", h.HandlerServerPostJSON)
 	h.Chi.Post("/", h.HandlerServerPost)
 	h.Chi.Post("/api/shorten/batch", h.HandlerServerPostJSONArray)
-	h.Chi.Post("/api/user/urls", h.HandlerServerPostDelArray)
+	h.Chi.Delete("/api/user/urls", h.HandlerServerPostDelArray)
 	return &h
 }
 
 func CookieHandle(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("token")
+		_, err := r.Cookie("token")
 		nc := NewCookie()
 
-		if cookie != nil {
-			fmt.Println("* cookie.Value : ", cookie.Value)
-		}
 		if err != nil {
 			r.AddCookie(nc)
 			http.SetCookie(w, nc)

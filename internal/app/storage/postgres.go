@@ -119,7 +119,12 @@ func (m *InPostgres) GetURL(shortURL string, UID string) (string, error) {
 		"where ur.url_short=$1 and us.user_id=$2 ", shortURL, UID). //and us.user_id=$2
 		Scan(&mUid.URL, &mUid.URLShort, &mUid.Deleted)
 	if err != nil {
-		return "", util.ErrHandler400
+		err = m.db.QueryRow(context.Background(), "select ur.url, ur.url_short, false deleted from url ur "+
+			"where ur.url_short=$1 ", shortURL). //and us.user_id=$2
+			Scan(&mUid.URL, &mUid.URLShort, &mUid.Deleted)
+		if err != nil {
+			return "", util.ErrHandler400
+		}
 	}
 	if mUid.Deleted {
 		return "", util.ErrHandler410
