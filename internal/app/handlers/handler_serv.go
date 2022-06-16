@@ -71,7 +71,7 @@ func NewCookie() *http.Cookie {
 
 func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Request) {
 	//set Cookie
-	cookie, err := r.Cookie("token")
+	cookie, _ := r.Cookie("token")
 	fmt.Println("cookie.Value : ", cookie.Value)
 
 	urlsFind, err := h.s.GetAllURLUid(cookie.Value) // storage.FindURL(id)
@@ -101,7 +101,7 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	// set Cookie
-	cookie, err := r.Cookie("token")
+	cookie, _ := r.Cookie("token")
 	fmt.Println(" id : ", id)
 	fmt.Println(" cookie.Value : ", cookie.Value)
 
@@ -161,7 +161,7 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 		reader = r.Body
 	}
 	// set Cookie
-	cookie, err := r.Cookie("token")
+	cookie, _ := r.Cookie("token")
 	fmt.Println(" cookie.Value : ", cookie.Value)
 
 	body, err := io.ReadAll(reader)
@@ -206,7 +206,7 @@ func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *htt
 	}
 	fmt.Println(" body ", string(body))
 
-	cookie, err := r.Cookie("token")
+	cookie, _ := r.Cookie("token")
 	fmt.Println(" cookie.Value : ", cookie.Value)
 
 	jsonURL, err := h.s.PutURLArray(body, cookie.Value)
@@ -253,7 +253,6 @@ func (h *HandlerServer) HandlerServerPostDelArray(w http.ResponseWriter, r *http
 	}
 
 	go h.s.DelURLArray(body, cookie.Value)
-
 	w.WriteHeader(http.StatusAccepted) //202
 }
 
@@ -275,7 +274,7 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 		//return util.ErrHandler500
 	}
 	// set Cookie
-	cookie, err := r.Cookie("token")
+	cookie, _ := r.Cookie("token")
 	fmt.Println(" cookie.Value : ", cookie.Value)
 
 	l := strings.ReplaceAll(string(body), "'", "")

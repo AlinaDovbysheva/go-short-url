@@ -18,7 +18,6 @@ func Test_configPingDB(t *testing.T) {
 			c := Config{}
 			c.ConfigServerEnv()
 			var err error
-			err = nil
 			require.NoError(t, err)
 		})
 	}

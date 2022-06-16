@@ -19,9 +19,7 @@ type strURLMem struct {
 	URL            string `json:"original_url"`
 	Correlation_id string `json:"correlation_id"`
 }
-type strURLDel struct {
-	URL string
-}
+
 type strURLMemOut struct {
 	URL            string `json:"short_url"`
 	Correlation_id string `json:"correlation_id"`
@@ -33,7 +31,7 @@ type InPostgres struct {
 }
 
 type URLUid struct {
-	Uid      string `json:"-"`
+	UID      string `json:"-"`
 	URLShort string `json:"short_url"`
 	URL      string `json:"original_url"`
 	Deleted  bool   `json:"-"`
@@ -85,7 +83,7 @@ func (m *InPostgres) PingDB() error {
 
 func (m *InPostgres) GetAllURLUid(UID string) ([]byte, error) {
 
-	mUid := make([]*URLUid, 0)
+	mUID := make([]*URLUid, 0)
 
 	rows, err := m.db.Query(context.Background(), "select t1.url, t1.url_short, t3.user_id from url t1  inner join users_url t2 on t2.url_id = t1.id inner join users t3 on t2.user_id=t3.id where t3.user_id=$1", UID)
 	if err != nil {
@@ -93,43 +91,43 @@ func (m *InPostgres) GetAllURLUid(UID string) ([]byte, error) {
 	}
 	for rows.Next() {
 		bk := new(URLUid)
-		err := rows.Scan(&bk.URL, &bk.URLShort, &bk.Uid)
+		err := rows.Scan(&bk.URL, &bk.URLShort, &bk.UID)
 		if err != nil {
 			return nil, err
 		}
 		bk.URLShort = app.BaseURL + `/` + bk.URLShort
-		mUid = append(mUid, bk)
+		mUID = append(mUID, bk)
 	}
 	defer rows.Close()
 
-	if len(mUid) < 1 {
+	if len(mUID) < 1 {
 		return nil, errors.New("urls is absent in db")
 	}
 
-	data, _ := json.Marshal(mUid)
+	data, _ := json.Marshal(mUID)
 	return data, nil
 }
 
 func (m *InPostgres) GetURL(shortURL string, UID string) (string, error) {
-	mUid := new(URLUid)
+	mUID := new(URLUid)
 
 	err := m.db.QueryRow(context.Background(), "select ur.url, ur.url_short, u.deleted from users_url u "+
 		"INNER JOIN url ur on u.url_id=ur.id "+
 		"INNER JOIN users us on u.user_id=us.id "+
 		"where ur.url_short=$1 and us.user_id=$2 ", shortURL, UID). //and us.user_id=$2
-		Scan(&mUid.URL, &mUid.URLShort, &mUid.Deleted)
+		Scan(&mUID.URL, &mUID.URLShort, &mUID.Deleted)
 	if err != nil {
 		err = m.db.QueryRow(context.Background(), "select ur.url, ur.url_short, false deleted from url ur "+
 			"where ur.url_short=$1 ", shortURL). //and us.user_id=$2
-			Scan(&mUid.URL, &mUid.URLShort, &mUid.Deleted)
+			Scan(&mUID.URL, &mUID.URLShort, &mUID.Deleted)
 		if err != nil {
 			return "", util.ErrHandler400
 		}
 	}
-	if mUid.Deleted {
+	if mUID.Deleted {
 		return "", util.ErrHandler410
 	}
-	return mUid.URL, nil
+	return mUID.URL, nil
 }
 
 func (m *InPostgres) PutURL(inputURL string, UID string) (string, []byte, error) {
@@ -172,10 +170,10 @@ func (m *InPostgres) PutURL(inputURL string, UID string) (string, []byte, error)
 func (m *InPostgres) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error) {
 	var idu int64
 	var ids int64
-	var valUrl []strURLMem
-	var valUrlOut []strURLMemOut
+	var valURL []strURLMem
+	var valURLOut []strURLMemOut
 	ctx := context.Background()
-	if err := json.Unmarshal([]byte(inputURLJSON), &valUrl); err != nil {
+	if err := json.Unmarshal([]byte(inputURLJSON), &valURL); err != nil {
 		panic(err)
 	}
 
@@ -188,7 +186,7 @@ func (m *InPostgres) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error
 		}
 	}
 
-	for _, v := range valUrl {
+	for _, v := range valURL {
 		short := ""
 		inputURL := v.URL
 		cor := v.Correlation_id
@@ -209,9 +207,9 @@ func (m *InPostgres) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error
 			}
 		}
 		short = app.BaseURL + `/` + short
-		valUrlOut = append(valUrlOut, strURLMemOut{short, cor})
+		valURLOut = append(valURLOut, strURLMemOut{short, cor})
 	}
-	data, _ := json.Marshal(valUrlOut)
+	data, _ := json.Marshal(valURLOut)
 	return data, nil
 }
 
@@ -224,15 +222,15 @@ func (m *InPostgres) DelURLArray(inputURLJSON []byte, UID string) error {
 		fmt.Println("User not exists in DB UID="+UID, err)
 		return err
 	}
-	vUrl := strings.ReplaceAll(string(inputURLJSON), " ", "")
-	vUrl = strings.ReplaceAll(strings.ReplaceAll(vUrl, "[", ""), "]", "")
+	vURL := strings.ReplaceAll(string(inputURLJSON), " ", "")
+	vURL = strings.ReplaceAll(strings.ReplaceAll(vURL, "[", ""), "]", "")
 
-	valUrl := strings.Split(strings.ReplaceAll(vUrl, "\"", ""), ",")
-	fmt.Println("Split url short ", valUrl)
-	if len(valUrl) > 20 {
+	valURL := strings.Split(strings.ReplaceAll(vURL, "\"", ""), ",")
+	fmt.Println("Split url short ", valURL)
+	if len(valURL) > 20 {
 		// batch
 		batch := &pgx.Batch{}
-		for _, v := range valUrl {
+		for _, v := range valURL {
 			batch.Queue("UPDATE users_url set deleted=true "+
 				"where url_id=(select id from url where url_short=$1) and user_id=$2", v, idu)
 		}
@@ -246,11 +244,12 @@ func (m *InPostgres) DelURLArray(inputURLJSON []byte, UID string) error {
 			fmt.Println("ct.RowsAffected() => %v, want %v", ct.RowsAffected(), 1)
 		}
 		br.Close()
+
 	} else {
 		// обновляем одним запросом, списком
-		vUrl := strings.ReplaceAll(vUrl, "\"", "'")
+		vURL := strings.ReplaceAll(vURL, "\"", "'")
 		query := "UPDATE users_url set deleted=true where " +
-			"url_id in (select id from url where url_short in (" + vUrl +
+			"url_id in (select id from url where url_short in (" + vURL +
 			") ) and user_id=$1"
 		fmt.Println("query =", query)
 		if _, err := m.db.Exec(ctx, query, idu); err != nil {
