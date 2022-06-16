@@ -225,6 +225,7 @@ func (m *InPostgres) DelURLArray(inputURLJSON []byte, UID string) error {
 		return err
 	}
 	vUrl := strings.ReplaceAll(strings.ReplaceAll(string(inputURLJSON), "\"", ""), " ", "")
+	vUrl = strings.ReplaceAll(strings.ReplaceAll(vUrl, "[", ""), "]", "")
 	valUrl := strings.Split(vUrl, ",")
 	fmt.Println("Split url short ", valUrl)
 	if len(valUrl) > 20 {
