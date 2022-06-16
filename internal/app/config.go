@@ -35,9 +35,9 @@ func (c *Config) ConfigServerEnv() {
 	}*/
 
 	DatabaseDsn = os.Getenv("DATABASE_DSN")
-	if DatabaseDsn == "" {
+	/*if DatabaseDsn == "" {
 		DatabaseDsn = "host=localhost port=5432 user=postgres password=plokij098 dbname=DB_shortner sslmode=disable"
-	}
+	}*/
 
 	flag.StringVar(&c.port, "a", ServerURL, "port to listen on")
 	flag.StringVar(&c.host, "b", BaseURL, "host to listen on")
