@@ -40,12 +40,11 @@ func NewHandlerServer(st storage.DBurl) *HandlerServer {
 	}
 
 	h.Chi.Get("/api/user/urls", h.HandlerServerGetUrls)
-	//h.Chi.Get("/ping/", h.HandlerServerGetPingDB)
 	h.Chi.Get("/{id}", h.HandlerServerGet)
 	h.Chi.Post("/api/shorten", h.HandlerServerPostJSON)
 	h.Chi.Post("/", h.HandlerServerPost)
 	h.Chi.Post("/api/shorten/batch", h.HandlerServerPostJSONArray)
-
+	h.Chi.Delete("/api/user/urls", h.HandlerServerPostDelArray)
 	return &h
 }
 
@@ -57,7 +56,7 @@ func CookieHandle(next http.Handler) http.Handler {
 		if err != nil {
 			r.AddCookie(nc)
 			http.SetCookie(w, nc)
-			fmt.Println("1. cookie.Value : ", nc.Value)
+			fmt.Println("New cookie.Value : ", nc.Value)
 		}
 		next.ServeHTTP(w, r)
 	})
@@ -72,7 +71,7 @@ func NewCookie() *http.Cookie {
 
 func (h *HandlerServer) HandlerServerGetUrls(w http.ResponseWriter, r *http.Request) {
 	//set Cookie
-	cookie, err := r.Cookie("token")
+	cookie, _ := r.Cookie("token")
 	fmt.Println("cookie.Value : ", cookie.Value)
 
 	urlsFind, err := h.s.GetAllURLUid(cookie.Value) // storage.FindURL(id)
@@ -90,9 +89,8 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		http.Error(w, "The query parameter is missing", http.StatusBadRequest)
-		//return util.ErrHandler400
 	}
-	if id == "ping" { //!!! пришлось сюда добавить, хотела отдельной функцией
+	if id == "ping" {
 		err := h.s.PingDB()
 		if err != nil {
 			http.Error(w, "internal Server Error ", http.StatusBadRequest)
@@ -104,13 +102,18 @@ func (h *HandlerServer) HandlerServerGet(w http.ResponseWriter, r *http.Request)
 	}
 	// set Cookie
 	cookie, _ := r.Cookie("token")
+	fmt.Println(" id : ", id)
 	fmt.Println(" cookie.Value : ", cookie.Value)
 
-	urlFind, _ := h.s.GetURL(id) // storage.FindURL(id)
+	urlFind, err := h.s.GetURL(id, cookie.Value) // storage.FindURL(id)
 	fmt.Println(urlFind)
-	if urlFind == "" {
-		http.Error(w, "Url not exist ", http.StatusBadRequest)
-		//return util.ErrHandler400
+	if errors.Is(err, util.ErrHandler410) {
+		w.WriteHeader(util.StorageErrToStatus(util.ErrHandler410)) //410
+		return
+	}
+	if errors.Is(err, util.ErrHandler400) {
+		w.WriteHeader(util.StorageErrToStatus(util.ErrHandler400))
+		return
 	}
 
 	fmt.Printf("token: %v\n", cookie.Value)
@@ -158,7 +161,7 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 		reader = r.Body
 	}
 	// set Cookie
-	cookie, err := r.Cookie("token")
+	cookie, _ := r.Cookie("token")
 	fmt.Println(" cookie.Value : ", cookie.Value)
 
 	body, err := io.ReadAll(reader)
@@ -181,7 +184,6 @@ func (h *HandlerServer) HandlerServerPostJSON(w http.ResponseWriter, r *http.Req
 		return
 	}
 	fmt.Fprintf(w, "url is not valid "+u)
-	//return util.ErrHandler500
 }
 
 func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *http.Request) {
@@ -204,7 +206,7 @@ func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *htt
 	}
 	fmt.Println(" body ", string(body))
 
-	cookie, err := r.Cookie("token")
+	cookie, _ := r.Cookie("token")
 	fmt.Println(" cookie.Value : ", cookie.Value)
 
 	jsonURL, err := h.s.PutURLArray(body, cookie.Value)
@@ -224,13 +226,42 @@ func (h *HandlerServer) HandlerServerPostJSONArray(w http.ResponseWriter, r *htt
 	w.WriteHeader(http.StatusBadRequest) //400
 }
 
+func (h *HandlerServer) HandlerServerPostDelArray(w http.ResponseWriter, r *http.Request) {
+	var reader io.Reader
+	if r.Header.Get(`Content-Encoding`) == `gzip` {
+		gz, err := gzip.NewReader(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		reader = gz
+		defer gz.Close()
+	} else {
+		reader = r.Body
+	}
+
+	body, err := io.ReadAll(reader)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+	}
+	fmt.Println(" body ", string(body))
+
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		fmt.Println(" cookie not exist : ", err)
+	} else {
+		fmt.Println(" cookie.Value : ", cookie.Value)
+	}
+
+	go h.s.DelURLArray(body, cookie.Value)
+	w.WriteHeader(http.StatusAccepted) //202
+}
+
 func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request) {
 	var reader io.Reader
 	if r.Header.Get(`Content-Encoding`) == `gzip` {
 		gz, err := gzip.NewReader(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-			//return util.ErrHandler500
 		}
 		reader = gz
 		defer gz.Close()
@@ -243,7 +274,7 @@ func (h *HandlerServer) HandlerServerPost(w http.ResponseWriter, r *http.Request
 		//return util.ErrHandler500
 	}
 	// set Cookie
-	cookie, err := r.Cookie("token")
+	cookie, _ := r.Cookie("token")
 	fmt.Println(" cookie.Value : ", cookie.Value)
 
 	l := strings.ReplaceAll(string(body), "'", "")

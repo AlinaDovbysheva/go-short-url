@@ -59,18 +59,24 @@ func (m *InFile) PingDB() error {
 func (m *InFile) GetAllURLUid(UID string) ([]byte, error) {
 	return nil, nil
 }
+func (m *InFile) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error) {
+	return nil, nil
+}
+func (m *InFile) DelURLArray(inputURLJSON []byte, UID string) error {
+	return nil
+}
 
-func (p *InFile) GetURL(shortURL string) (string, error) {
-	sID := p.mapURL[shortURL]
+func (m *InFile) GetURL(shortURL string, UID string) (string, error) {
+	sID := m.mapURL[shortURL]
 	if sID == "" {
 		return "", errors.New("id is absent in db")
 	}
 	return sID, nil
 }
 
-func (p *InFile) PutURL(inputURL string, UID string) (string, []byte, error) {
+func (m *InFile) PutURL(inputURL string, UID string) (string, []byte, error) {
 	id := ""
-	for k, v := range p.mapURL {
+	for k, v := range m.mapURL {
 		if v == inputURL {
 			id = k
 		}
@@ -80,16 +86,16 @@ func (p *InFile) PutURL(inputURL string, UID string) (string, []byte, error) {
 		id = util.RandStringBytes(7)
 
 		//p.mutex.Lock()
-		p.mapURL[id] = inputURL
+		m.mapURL[id] = inputURL
 		//p.mutex.Unlock()
 
 		//------write to file
 		event := Event{id, inputURL}
-		wf, err := NewWFile(p.fileName)
+		wf, err := NewWFile(m.fileName)
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer wf.Close()
+		defer wf.CloseWFile()
 		//p.mutex.Lock()
 		if err := wf.WriteEvent(event); err != nil {
 			log.Fatal(err)
@@ -98,10 +104,6 @@ func (p *InFile) PutURL(inputURL string, UID string) (string, []byte, error) {
 	}
 	d := util.StrtoJSON(app.BaseURL + `/` + id)
 	return id, d, nil
-}
-
-func (m *InFile) PutURLArray(inputURLJSON []byte, UID string) ([]byte, error) {
-	return nil, nil
 }
 
 type WFile struct {
@@ -120,12 +122,12 @@ func NewWFile(fileName string) (*WFile, error) {
 	}, nil
 }
 
-func (p *WFile) WriteEvent(event Event) error {
-	return p.encoder.Encode(&event)
+func (m *WFile) WriteEvent(event Event) error {
+	return m.encoder.Encode(&event)
 }
 
-func (p *WFile) Close() error {
-	return p.file.Close()
+func (m *WFile) CloseWFile() error {
+	return m.file.Close()
 }
 
 type RFile struct {
@@ -150,6 +152,6 @@ func (c *RFile) ReadEvent() (*Event, error) {
 	}
 	return event, nil
 }
-func (c *RFile) Close() error {
+func (c *RFile) CloseRFile() error {
 	return c.file.Close()
 }
